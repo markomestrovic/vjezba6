@@ -1,4 +1,11 @@
-import Image from 'next/image';
+import TestimonialListItem from './TestimonialListItem';
+
+const testimonials = [
+    { src: 'design-system', ext: 'jpg', text: 'New design system' },
+    { src: 'from-scratch', ext: 'jpg', text: 'From scratch' },
+    { src: 'brand', ext: 'png', text: 'Brand transformation' },
+    { src: 'book-cover', ext: 'jpg', text: 'Book cover design' },
+];
 
 const Testimonials = () => (
     <section className="mt-12 py-12 bg-gray-50">
@@ -12,101 +19,9 @@ const Testimonials = () => (
                 </h4>
             </div>
             <div className="mt-12 grid grid-cols-2 gap-4">
-                <div className="h-96 border hover:cursor-pointer">
-                    <div className="h-4/5 bg-gray-100 relative">
-                        <Image
-                            src={'/design-system.jpg'}
-                            layout="fill"
-                            objectFit="cover"
-                            alt="Grow business"
-                        />
-                    </div>
-                    <div className="h-1/5 bg-gray-300 flex items-center justify-center relative">
-                        <p className="capitalize font-roboto-condensed text-xl text-hci-lila">
-                            New design system
-                        </p>
-                        <div className="absolute right-4 h-full flex items-center">
-                            <Image
-                                src={'/right.svg'}
-                                layout="fixed"
-                                width={15}
-                                height={15}
-                                alt="Right icon"
-                            />
-                        </div>
-                    </div>
-                </div>
-                <div className="h-96 border hover:cursor-pointer">
-                    <div className="h-4/5 bg-gray-100 relative">
-                        <Image
-                            src={'/from-scratch.jpg'}
-                            layout="fill"
-                            objectFit="cover"
-                            alt="Grow business"
-                        />
-                    </div>
-                    <div className="h-1/5 bg-gray-300 flex items-center justify-center relative">
-                        <p className="capitalize font-roboto-condensed text-xl text-hci-lila">
-                            Design from scratch
-                        </p>
-                        <div className="absolute right-4 h-full flex items-center">
-                            <Image
-                                src={'/right.svg'}
-                                layout="fixed"
-                                width={15}
-                                height={15}
-                                alt="Right icon"
-                            />
-                        </div>
-                    </div>
-                </div>
-                <div className="h-96 border hover:cursor-pointer">
-                    <div className="h-4/5 bg-gray-100 relative">
-                        <Image
-                            src={'/brand.png'}
-                            layout="fill"
-                            objectFit="cover"
-                            alt="Grow business"
-                        />
-                    </div>
-                    <div className="h-1/5 bg-gray-300 flex items-center justify-center relative">
-                        <p className="capitalize font-roboto-condensed text-xl text-hci-lila">
-                            Brand transformation
-                        </p>
-                        <div className="absolute right-4 h-full flex items-center">
-                            <Image
-                                src={'/right.svg'}
-                                layout="fixed"
-                                width={15}
-                                height={15}
-                                alt="Right icon"
-                            />
-                        </div>
-                    </div>
-                </div>
-                <div className="h-96 border hover:cursor-pointer">
-                    <div className="h-4/5 bg-gray-100 relative">
-                        <Image
-                            src={'/book-cover.jpg'}
-                            layout="fill"
-                            alt="Grow business"
-                        />
-                    </div>
-                    <div className="h-1/5 bg-gray-300 flex items-center justify-center relative">
-                        <p className="capitalize font-roboto-condensed text-xl text-hci-lila">
-                            Book cover design
-                        </p>
-                        <div className="absolute right-4 h-full flex items-center">
-                            <Image
-                                src={'/right.svg'}
-                                layout="fixed"
-                                width={15}
-                                height={15}
-                                alt="Right icon"
-                            />
-                        </div>
-                    </div>
-                </div>
+                {testimonials.map((testimonial) => (
+                    <TestimonialListItem key={testimonial.src} {...testimonial} />
+                ))}
             </div>
             <button className="capitalize mt-12 mb-12 mx-auto w-1/3 py-3 border shadow-md whitespace-nowrap text-xl text-hci-lila font-medium hover:bg-gray-100">
                 View showcase
