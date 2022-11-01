@@ -2,7 +2,7 @@ import Image from 'next/image';
 
 import LogoImg from '../assets/logo.png';
 import HeroImg from '../assets/hero.png';
-import NavBar from './navbar';
+import NavBar from './Navbar';
 
 const Header = () => {
     return (

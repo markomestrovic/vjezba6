@@ -1,21 +1,20 @@
-const navigationItems = [
-    'Home',
-    'About us',
-    'Showcase',
-    'Blog',
-    'Contact',
-    'Sign in',
-];
+import { navigationItems } from '../constants/navbar';
+import { useRouter } from 'next/router';
 
 const NavBar = () => {
+    const router = useRouter();
+    const currentPage = router.pathname;
+
+    //TODO: Add styling for the current page
+
     return (
         <nav className="inline-flex list-none font-medium text-hci-lila">
-            {navigationItems.map((item) => (
+            {navigationItems.map(({ label }) => (
                 <li
-                    key={item}
+                    key={label}
                     className="px-5 py-2 whitespace-nowrap hover:bg-hci-lila hover:bg-opacity-50 hover:text-white cursor-pointer"
                 >
-                    {item}
+                    {label}
                 </li>
             ))}
         </nav>
