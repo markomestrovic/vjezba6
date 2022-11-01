@@ -1,14 +1,11 @@
-import Header from '../components/Header';
-import Footer from '../components/Footer';
+import HeaderFooterLayout from '../layouts/HeaderFooterLayout';
 
 const About = () => (
-    <>
-        <Header />
+    <HeaderFooterLayout>
         <main>
             <h1>About</h1>
         </main>
-        <Footer />
-    </>
+    </HeaderFooterLayout>
 );
 
 export default About;
