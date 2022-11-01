@@ -42,3 +42,23 @@
     width: 50%;
     object-fit: contain;
 }
+
+@media screen and (max-width: 768px) {
+    .container {
+        flex-direction: column;
+        padding: 16px;
+    }
+
+    .container .description {
+        width: 100%;
+        margin-top: 32px;
+    }
+
+    .container .description .learn-more-button {
+        width: 100%;
+    }
+
+    .image {
+        width: 100%;
+    }
+}
