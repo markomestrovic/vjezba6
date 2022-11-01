@@ -3,7 +3,7 @@ import LogoImg from '../assets/logo.png';
 
 const Footer = () => (
     <section className="py-12 bg-hci-lila-dark text-hci-lila-light">
-        <main className="max-w-4xl flex flex-col mx-auto">
+        <main className="max-w-4xl flex flex-col mx-auto p-8 md:p-16">
             <div className="flex items-start justify-between">
                 <div>
                     <Image
@@ -37,7 +37,7 @@ const Footer = () => (
                     </div>
                 </div>
 
-                <div>
+                <div className="hidden md:block">
                     <h3 className="capitalize text-3xl font-roboto-condensed font-bold text-white">
                         Contact us
                     </h3>
