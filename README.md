@@ -1,363 +1,51 @@
 # HCI-vježbe-2022-2023
 
-## Vježba 3: Styling in React and Layouts
+## Vježba 4: State
 
-Za početak, naslanjamo se na prošlu vježbu te ćemo pokušati smanjiti duplikaciju koda još malo koristeći **Layout component**. Nakon toga ćemo poraditi na navigacijskog traci i dodati highlight za trenutnu stranicu. Za to će nam trebati _styling_.
-
-Pokazat ćemo nekoliko načina stiliziranja komponenti u React-u. Osnovni princip je isti kao i kod običnih HTML stranica; HTML je sadržaj i struktura, a CSS "šminka".
-
-Za stiliziranje u React-u postoji više pristupa:
-
--   CSS
-    -   Modules
-    -   Global (Vanilla ili BEM)
--   CSS in JS
-    -   Styled components
-    -   `style` property
-    -   Generated ClassNames
--   No CSS, Utility classes
-    -   **Tailwind / Bootstrap i slično**
-
-Referenca: https://jsramblings.com/understand-the-react-styling-paradigms/
-
-Toplo preporučamo SASS (SCSS) za one koji se odluče na CSS pristup.
-https://sass-lang.com/
-
-Naši materijali za CSS:  
-https://github.com/kula124/HCi_2020_Fresh/tree/bonus--sytling-and-css
-
-Kao i prije, vježba se radi u koracima po commitovima. Ovaj put ćemo smanjiti veličinu commitova što znači da ćemo commitati češće, što je i poželjno u praksi i omogućit će nam da se lakše pratimo za vrijeme vježbi.
-
-## Commit 1: Create new About Us page
-
-Stvaramo novi page unutar `pages` foldera i nazivamo ga `about.js`.
+U dosadašnjim vježbama upoznali smo bitan aspekt React-a, a to je **props**. Koristili smo ga za prosljeđivanje parametara React funkciji tj. komponenti.
 
 ```jsx
-const About = () => (
-    <div>
-        <h1>About</h1>
-    </div>
-);
-
-export default About;
+<Component thisIsAProp="Hi, I'm prop" objectProp={{ iAm: 'prop' }} />
 ```
+
+U ovoj vježbi upoznat ćemo drugi bitan aspekt React-a: **state**
+
+State, props i JSX su srž Reacta. U današnjoj vježbi ćemo pisati manje koda nego inače jer ima dosta teorije za proći.
+
+Za demonstraciju koristimo novi page koji je već dodan, ali nije povezan s navigacijom pa će nam prvi korak biti popraviti navigaciju.
+
+### Commit 1: Add new pages to navigation
+
+U `constants/navbar.js` dodajemo dvije novu stranicu: State Showcase na `/state`
+
+Ta stranica se nalazi u `pages/` folderu.
 
 > ✅ Commit  
 > `git add .`  
-> `git commit -m "Vjezba 3: Create about page"`
+> `git commit -m "Vjezba 4: Add new pages to navigation"`
 
-## Commit 2: Add Header and Footer to about page
+### Commit 2: Fix navigation linking
 
-Da ne bismo imali totalno prazan page, dodajmo gotove _Header_ i _Footer_ komponente kroz import.
+U `components/Navbar.js` popravit ćemo navigaciju tako da se možemo navigirati klikom. Koristimo `Link` komponentu koju nam daje _Next_ za ovu svrhu.
 
-```jsx
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+> Tehnički možemo koristiti i običan `<a>` tag, ali onda gubimo neke optimizacije koje nam pruža Next. Više o tome u sljedećoj vježbi gdje ćemo se malo više baviti specifičnostima Nexta, a za one koje to zanima tu je Google :)
+> To pitanje je dosta popularno.
 
+Dovoljno je samo:
 
-const About = () => (
-  <Header />
-  <main>
-    <h1>About</h1>
-  </main>
-  <Footer />
-);
+-   Importati `Link` iz `next/link` paketa
+-   Zamotati (wrap) `<li>` s `<Link>` komponentom
+-   Link prima `href` slično kao i `<a>` tag. Taj href je nama `path`
 
-export default About;
-```
+> ⚠️ `<Link>` zna zezati tj. ne radi ispravno ako imate space između tagova i traži server restart. Ispod je dan gotov primjer, ako zeza kopirajte i ako ne radi probajte ponovno pokrenuti server.
 
-Kod iznad ne radi. Razlog je taj što React komponenta može vratiti samo jedan top level element, a ovdje su tri (Header, main, Footer). Ključna riječ je _**top-level**_, što znači ako ih sve zamotamo u npr. `div` ili `main` onda imamo jedan top-level što je dopušteno.
-
-```jsx
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-
-const About = () => (
-    <div> // <--- top level element
-        <Header />
-        <main>
-            <h1>About</h1>
-        </main>
-        <Footer />
-    </div>
-);
-
-export default About;
-```
-
-Međutim, na ovaj način dodajemo novi `div` tag što može poremetiti naše CSS selektore u nekim slučajevima i dodaje nepotreban HTML tag u DOM. React nam daje prazan tag koji se zove **_React Fragment_** baš za ovaj use-case:
-
-```jsx
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-
-const About = () => (
-    <> // <--- top level Fragment element
-        <Header />
-        <main>
-            <h1>About</h1>
-        </main>
-        <Footer />
-    </>
-);
-
-export default About;
-```
-
-> ✅ Commit  
-> `git add .`  
-> `git commit -m "Vjezba 3: Header and Footer to about page"`
-
-## Commit 3: Create Layout component
-
-Primijetimo da na novoj stranici i na Home stranici radimo import za _Header_ i _Footer_. To je isto nepotrebna duplikacija koda što možemo popraviti. Želimo postići da se Header i Footer pojave iznad i ispod nekog danog sadržaja. Ponekad želimo i Sidebar, Comments Section i slično na svim svojim stranicama što znači da dupliciramo kod. Komponenta koja rješava taj problem zove se **Layout** komponenta.
-
-Stvaramo novi folder kojeg nazivamo `Layouts` i unutar novi file kojeg zovemo `HeaderFooterLayout.js`.
-
-```jsx
-import Header from '../components/Header.js';
-import Footer from '../components/Footer.js';
-
-const HeaderFooterLayout = ({ children, ...rest }) => {
-    return (
-        <>
-            <Header />
-            <main {...rest}>{children}</main>
-            <Footer />
-        </>
-    );
-};
-
-export default HeaderFooterLayout;
-```
-
-Primijetimo da je pattern isti kao za `about.js` page, ali umjesto sadržaja stranice nalazi se `children` prop. Children može biti bilo koji sadržaj što znači da je ova komponenta sad **reuseable**.
-
-> ℹ️ `children` je poseban prop u React-u koji označava sadržaj unutar komponente ili u HTML-u sadržaj unutar HTML taga.
-
-Primjer:
-
-```html
-<section id="comments-section">
-    <h3>View comments</h3>
-    <ul id="comments-list">
-        <li class="comment-post">
-            <p>This is a comment</p>
-        </li>
-        <li class="comment-post">
-            <p>This is a also a comment</p>
-        </li>
-        . . .
-    </ul>
-</section>
-```
-
-Sve unutar `comment-section` taga je njegov _children_ ,znači _h3_ i _ul_. To onda znači da su _h3_ i _ul_ **siblings**.
-To, također, znači da je text `"View comments"` children od _h3_, a komentari (`<li>`) su children od _ul_. Svi _li_ elementi su također i **siblings**.
-
-U _React-u_ to bi bilo ovako nešto:
-
-```JSX
-<GenericContainer direction='column' justify='center'>
-    <CommentsList title='View comments' comments={arrayOfComments} />
-</GenericContainer>
-```
-
-`GenericContainer` komponenta je samo container koji prima sadržaj kao parametar. U ovom slučaju prima drugu komponentu koja se zove `CommentsList`.Znači da je `CommentsList` njen **children** prop. Međutim, prima i druge parametre: `direction` i `justify`. Znači da bi njen potpis bio ovo:
-
-```jsx
-const GenericContainer = ({
-    children,
-    direction,
-    justify,
-    josNekiParamMozda,
-    ...rest,
-}) => (...);
-```
-
-> ✅ Commit  
-> `git add .`  
-> `git commit -m "Vjezba 3: Create Layout component"`
-
-## Commit 4: Use Layout
-
-Mijenjamo `home.js` i `about.js` tako da koriste `Layout`.
-
-```jsx
-// pages/home.js
-import CTA from '../components/CTA.js';
-import Testimonials from '../components/Testimonials.js';
-import HeaderFooterLayout from '../layouts/HeaderFooterLayout.js';
-
-const Home = () => {
-    return (
-        <>
-            <HeaderFooterLayout>
-                <CTA />
-                <Testimonials />
-            </HeaderFooterLayout>
-        </>
-    );
-};
-
-export default Home;
-```
-
-```jsx
-// pages/about.js
-import HeaderFooterLayout from '../layouts/HeaderFooterLayout';
-
-const About = () => (
-    <HeaderFooterLayout>
-        <main>
-            <h1>About</h1>
-        </main>
-    </HeaderFooterLayout>
-);
-
-export default About;
-```
-
-> ✅ Commit  
-> `git add .`  
-> `git commit -m "Vjezba 3: Use Layout component"`
-
-## Commit 5: Add /about to navigation items
-
-Unutar `constants/navbar.js` datoteke imamo niz navigacijskih linkova. Za svaki od njih definirana su dva polja:
-
--   `label`: Ono što vidimo na stranici
--   `path`: URL slug (putanja) na kojoj se nalaze
-
-Za početak, dodajmo novu putanju za `/about` page.
-
-```jsx
-export const navigationItems = [
-    { label: 'Home', path: '/home' },
-    { label: 'About us', path: '/about' },
-    { label: 'Showcase', path: '' },
-    { label: 'Blog', path: '' },
-    { label: 'Contact', path: '' },
-    { label: 'Sign in', path: '' },
-];
-```
-
-> ✅ Commit  
-> `git add .`  
-> `git commit -m "Vjezba 3: Add /about to navigation items"`
-
-## Commit 6: Style active navigation item
-
-Želimo posebno označiti trenutno selektiran navigacijski tab. Unutar `Navbar.js` datoteke vidimo sljedeći kod:
-
-```jsx
-import { useRouter } from 'next/router';
-// ...
-const router = useRouter();
-const currentPage = router.pathname;
-```
-
-Koristeći `next/router` dohvaćamo trenutni page. Za `home.js` page to će biti `/home`, a za `about.js` bit će `/about`
-
-Želimo primijeniti CSS stil na onaj koji je trenutno aktivan i želimo da se to događa dinamički.
-
-Vidimo poznatu `.map()` funkciju koja ide kroz niz svih navigacijskih tabova i stvara `<li>` elemente.  
-Unutar te funkcije trebamo napraviti provjeru:
-
--   Ako je `path` polje trenutnog elementa niza jednako trenutnoj stranici (`currentPage`) onda prikažemo drugačiji CSS
--   Ako nije vraćamo `<li>` kao prije.
-
-Rješenje je ispod:
-
-<details>
-<summary>Solution 1</summary>
+Kod:
 
 ```jsx
 import { navigationItems } from '../constants/navbar';
 import { useRouter } from 'next/router';
 
-const NavBar = () => {
-    const router = useRouter();
-    const currentPage = router.pathname;
-
-    return (
-        <nav className="inline-flex list-none font-medium text-hci-lila">
-            {navigationItems.map(({ label, path }) => {
-                if (currentPage === path)
-                    return (
-                        <li
-                            key={label}
-                            className="px-5 py-2 whitespace-nowrap text-hci-lila-light bg-hci-lila bg-opacity-60 hover:bg-hci-lila hover:bg-opacity-50 hover:text-white cursor-pointer"
-                        >
-                            {label}
-                        </li>
-                    );
-
-                return (
-                    <li
-                        key={label}
-                        className="px-5 py-2 whitespace-nowrap hover:bg-hci-lila hover:bg-opacity-50 hover:text-white cursor-pointer"
-                    >
-                        {label}
-                    </li>
-                );
-            })}
-        </nav>
-    );
-};
-
-export default NavBar;
-```
-
-</details>
-
-Umjesto da imamo dva puta `return` možemo i pomoću varijable:
-
-<details>
-<summary>Solution 2</summary>
-
-```jsx
-import { navigationItems } from '../constants/navbar';
-import { useRouter } from 'next/router';
-
-const NavBar = () => {
-    const router = useRouter();
-    const currentPage = router.pathname;
-
-    return (
-        <nav className="inline-flex list-none font-medium text-hci-lila">
-            {navigationItems.map(({ label, path }) => {
-                const activeClasses =
-                    currentPage === path
-                        ? 'text-hci-lila-light bg-hci-lila bg-opacity-60'
-                        : '';
-
-                return (
-                    <li
-                        key={label}
-                        className={`px-5 py-2 whitespace-nowrap hover:bg-hci-lila hover:bg-opacity-50 hover:text-white cursor-pointer ${activeClasses}`}
-                    >
-                        {label}
-                    </li>
-                );
-            })}
-        </nav>
-    );
-};
-
-export default NavBar;
-```
-
-</details>
-
-Ili još kraće, ternarnim operatorom unutar samog stringa čime izbjegavamo varijablu i return:
-
-<details>
-<summary>Solution 3</summary>
-
-```jsx
-import { navigationItems } from '../constants/navbar';
-import { useRouter } from 'next/router';
+import Link from 'next/link';
 
 const NavBar = () => {
     const router = useRouter();
@@ -366,16 +54,18 @@ const NavBar = () => {
     return (
         <nav className="inline-flex list-none font-medium text-hci-lila">
             {navigationItems.map(({ label, path }) => (
-                <li
-                    key={label}
-                    className={`px-5 py-2 whitespace-nowrap hover:bg-hci-lila hover:bg-opacity-50 hover:text-white cursor-pointer ${
-                        currentPage === path
-                            ? 'text-hci-lila-light bg-hci-lila bg-opacity-60'
-                            : ''
-                    }`}
-                >
-                    {label}
-                </li>
+                <Link href={path} key={label} passHref>
+                    <li
+                        key={label}
+                        className={`px-5 py-2 whitespace-nowrap hover:bg-hci-lila hover:bg-opacity-50 hover:text-white cursor-pointer ${
+                            currentPage === path
+                                ? 'text-hci-lila-light bg-hci-lila bg-opacity-60'
+                                : ''
+                        }`}
+                    >
+                        {label}
+                    </li>
+                </Link>
             ))}
         </nav>
     );
@@ -384,384 +74,883 @@ const NavBar = () => {
 export default NavBar;
 ```
 
-</details>
-
 > ✅ Commit  
 > `git add .`  
-> `git commit -m "Vjezba 3: Style active navbar item"`
+> `git commit -m "Vjezba 4: Fix navigation linking"`
 
-## Commit 7: Add new CSS file
+### Commit 3: Add toggle to student list [WIP]
 
-Dodajemo sadržaj u `about.js`.  
-Stvorimo novi file `styles/about.css` za CSS kod i pokušajmo ga import u `about.js`:
+> ⚠️ Sljedećih par zadataka riješit ćemo u koracima tako da će kod raditi ispravno tek nakon nekoliko commitova. Ti neispravni commitovi su označeni s [WIP]: **Work in progress**
 
-```jsx
-// pages/about.js
-import '../styles/about.css';
-```
+Idemo na React state. Kliknimo na `State Showcase` u navigaciji i dolazimo na novi page. Njegov file se nalazi u `pages/state.js`.
 
-I imamo error u konzoli:
+Za početak, napravimo da se lista studenata može sakriti. Tome će služiti `Toggle` button. Klikom na button možemo sakriti studente. Radimo to u 3 koraka:
 
-```
-error - ./styles/about.css
-Global CSS cannot be imported from files other than your Custom <App>. Due to the Global nature of stylesheets, and to avoid conflicts, Please move all first-party global CSS imports to pages/_app.js. Or convert the import to Component-Level CSS (CSS Modules).
-Read more: https://nextjs.org/docs/messages/css-global
-Location: pages/about.js
-```
-
-Izbrišimo taj import!
-
-Da bismo koristili **globalni** CSS moramo ga importati u globalni (root) file, a to je `_app.js`.
+    1. Definiramo varijablu koja govori je li lista skrivena ili ne
+    2. Definiramo `onClick` funkciju koja mijenja tu varijablu
+    3. Ovisno o varijabli vraćamo niz studenata ili prazan tag (možda neku poruku)
 
 ```jsx
-// _app.js
-import '../styles/globals.css';
-import '../styles/about.css';
-
-function MyApp({ Component, pageProps }) {
-    return <Component {...pageProps} />;
-}
-
-export default MyApp;
-```
-
-> ✅ Commit  
-> `git add .`  
-> `git commit -m "Vjezba 3: Style active navbar item"`
-
-## Commit 8: Add about content
-
-Dodajmo sadržaj
-
-<details>
-<summary>about.js</summary>
-
-```jsx
+import React from 'react';
 import Image from 'next/image';
 import HeaderFooterLayout from '../layouts/HeaderFooterLayout';
 
-const About = () => (
-    <HeaderFooterLayout>
-        <main className="container">
-            <section className="description">
-                <h1 className="title">About</h1>
-                <p className="text">
-                    We are software developers, designers, and entrepreneurs who are
-                    passionate about building products that make a difference in
-                    peoples lives. We are a team of 5 people based in the United
-                    States and Canada. We use React and NextJS to build our web
-                    applications.
-                </p>
-                <button className="learn-more-button">
-                    <a href="https://nextjs.org/">Learn more</a>
-                </button>
+const studentsConstArray = [
+    {
+        id: 1,
+        name: 'Mate',
+        lName: 'Matic',
+        imgSrc: '/profile.jpg',
+    },
+    {
+        id: 2,
+        name: 'Jure',
+        lName: 'Juric',
+        imgSrc: '/profile.jpg',
+    },
+];
+
+const Student = ({ name, lName, imgSrc }) => {
+    return (
+        <li className="flex flex-row relative items-center">
+            <section className="mr-5 w-24 mt-5 mb-5 flex-row justify-between flex items-center">
+                <p>{name}</p>
+                <p>{lName}</p>
             </section>
-            <section className="image">
-                <Image
-                    width="100%"
-                    height="100%"
-                    layout="responsive"
-                    objectFit="cover"
-                    src="/about-us.png"
-                    alt="about us image"
-                    className="about-us-img"
-                />
-            </section>
-        </main>
-    </HeaderFooterLayout>
-);
+            <Image
+                className="absolute right-3 top-3"
+                layout="fixed"
+                width="50px"
+                height="50px"
+                src={imgSrc}
+                alt="profile image"
+            />
+        </li>
+    );
+};
 
-export default About;
-```
+const StateDemo = () => {
+    let shouldHideList = false;
 
-</details>
+    const handleToggle = () => {
+        shouldHideList = !shouldHideList;
+        console.log(shouldHideList);
+    };
 
-<details>
-<summary>styles/about.css</summary>
-
-```css
-.container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 32px;
-    padding-right: 0;
-    max-width: unset;
-}
-
-.container .title {
-    font-size: 32px;
-    font-weight: 700;
-    color: #000;
-    margin: 0;
-}
-
-.container .description {
-    width: 50%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.container .description .learn-more-button {
-    display: inline-block;
-    padding: 16px 32px;
-    background-color: blueviolet;
-    color: white;
-    width: 50%;
-    border-radius: 16px;
-    cursor: pointer;
-    margin-top: 32px;
-}
-
-.container .description .learn-more-button:hover {
-    background-color: purple;
-}
-
-.image {
-    position: relative;
-    height: 100%;
-    width: 50%;
-    object-fit: contain;
-}
-```
-
-</details>
-
-> ✅ Commit  
-> `git add .`  
-> `git commit -m "Vjezba 3: Add about content"`
-
-## Commit 9: CSS modules
-
-Ako dodamo `.container` selektor u bilo koji drugi file možemo neželjeno utjecati na izgled `pages/about.js` jer koristimo `.container` tamo. Zapravo, _Tailwind_ već utječe na .container tako što stavlja `max-width`. Probajte izbrisati liniju 7 u `styles/about.css`. Ili, da bude očitije, dodajmo
-
-```css
-// styles/global
-
-.container {
-    background-color: red;
-}
-```
-
-Trebali bi promijeniti ime u `.about-container` ili nešto slično. Tako isto bi trebali raditi i za svaki drugi page te za svaku komponentu.
-
-Međutim činjenica je da s rastom projekta raste i broj klasa, a time i šansa da se neka klasa ponovi. Bilo bi super kad bi nazivi klasa u različitim datotekama mogli uvijek biti unikatni (bez kolizije) ako znamo da će se primijeniti na samo jednu React komponentu.
-
-To se može napraviti s **CSS Modulima.**  
-Pretvorimo about.css u modul tako da promijenimo naziv u `about.module.css`
-
-> ℹ️ .module. je rezervirana riječ u nazivu datoteke za CSS module. To daje do znanja Reactu da taj file nije globalan. Ako toga nema, onda je globalan.
-
-Za korištenje modula potrebno je ispraviti import i importati objekt iz CSS filea. Umjesto stringova, koristimo polja iz tog objekta za nazive klasa.
-
-```jsx
-import Image from 'next/image';
-import HeaderFooterLayout from '../layouts/HeaderFooterLayout';
-
-import styles from '/styles/about.module.css';
-
-const About = () => (
-    <HeaderFooterLayout>
-        <main className={styles.container}>
-            <section className={styles.description}>
-                <h1 className={styles.title}>About</h1>
-                <p className={styles.text}>
-                    We are software developers, designers, and entrepreneurs who are
-                    passionate about building products that make a difference in
-                    peoples lives. We are a team of 5 people based in the United
-                    States and Canada. We use React and NextJS to build our web
-                    applications.
-                </p>
-                <button className={styles['learn-more-button']}>
-                    <a href="https://nextjs.org/">Learn more</a>
-                </button>
-            </section>
-            <section className={styles.image}>
-                <Image
-                    width="100%"
-                    height="100%"
-                    layout="responsive"
-                    objectFit="cover"
-                    src="/about-us.png"
-                    alt="about us image"
-                    className="about-us-img"
-                />
-            </section>
-        </main>
-    </HeaderFooterLayout>
-);
-
-export default About;
-```
-
-> ✅ Commit  
-> `git add .`  
-> `git commit -m "Vjezba 3: About CSS module"`
-
-## Commit 10: Responsive about page
-
-Ako je ekran uređaja premalen da prikaže sadržaj, onda ga želimo smanjiti ili pretvoriti retke u stupce i sl. Recimo, ako je ekran manji od 768px onda neka `flex-direction` bude `column`, neka padding bude 16px umjesto 32px i sl. Upravo tako se i radi responzivnost na Webu. API za to daje nam **@media query**.
-
-```css
-@media screen and (max-width: 768px) {
-    .container {
-        flex-direction: column;
-        padding: 16px;
+    if (shouldHideList) {
+        return <p>Sorry, studenti spavaju 😴 </p>;
     }
 
-    .container .description {
-        width: 100%;
-        margin-top: 32px;
-    }
-
-    .container .description .learn-more-button {
-        width: 100%;
-    }
-
-    .image {
-        width: 100%;
-    }
-}
-```
-
-U prijevodu, ako je širina ekrana manja od 768px (tj. do maksimalno 768px) onda primijeni sljedeće stilove.
-
-Dodajmo taj kod na kraj `/styles/about.module.css` datoteke.
-
-> ✅ Commit  
-> `git add .`  
-> `git commit -m "Vjezba 3: Responsive about page"`
-
-## Commit 11: Responsive Footer
-
-Tailwind responsivness je jednostavnan:  
-https://tailwindcss.com/docs/responsive-design
-
-Ide mobile first znači da su sve klase za mobile i onda dodajemo breakpoint sa npr. `md:` ili `xl:` i sl.
-
-Pogledajte docs. Jedan jednostavan primjer je `Footer.js`.
-
-Dodajmo padding od 16px za large screen i 8px za manji od `:md` što je 768px.
-
-Linija 6:
-
-```jsx
-...
- <main className="max-w-4xl flex flex-col mx-auto p-8 md:p-16">
- ...
-```
-
-Sakrijmo formu za mobitele. Linija 40:
-
-```jsx
-<div className="hidden md:block">
-```
-
-Gotov file:
-
-```jsx
-import Image from 'next/image';
-import LogoImg from '../assets/logo.png';
-
-const Footer = () => (
-    <section className="py-12 bg-hci-lila-dark text-hci-lila-light">
-        <main className="max-w-4xl flex flex-col mx-auto p-8 md:p-4">
-            <div className="flex items-start justify-between">
-                <div>
-                    <Image
-                        src={LogoImg}
-                        layout="fixed"
-                        width={50}
-                        height={50}
-                        alt="Design logo"
+    return (
+        <HeaderFooterLayout>
+            <main className="py-8">
+                <h1 className="text-center mt-5 mb-5 font-bold text-4xl underline">
+                    Welcome to state demo!
+                </h1>
+                <ul className="flex flex-col items-center justify-around">
+                    {studentsConstArray.map((el) => (
+                        <Student key={el.id} {...el} />
+                    ))}
+                </ul>
+                <section className="flex flex-col w-64 justify-center items-center my-0 mx-auto border-gray-500">
+                    <input
+                        className="border-b-2 outline-none mt-5 border-solid border-gray-500"
+                        type="text"
+                        placeholder="Name"
                     />
-                    <div className="mt-8">
-                        <div className="flex items-center">
-                            <Image
-                                src={'/phone.svg'}
-                                layout="fixed"
-                                width={15}
-                                height={15}
-                                alt="Phone icon"
-                            />
-                            <p className="ml-4">+385 123 0000</p>
-                        </div>
-                        <div className="flex items-center">
-                            <Image
-                                src={'/email.svg'}
-                                layout="fixed"
-                                width={15}
-                                height={15}
-                                alt="Email icon"
-                            />
-                            <p className="ml-4">design@fesb.hr</p>
-                        </div>
-                    </div>
-                </div>
+                    <input
+                        className="border-b-2 outline-none mt-5 border-solid border-gray-500"
+                        type="text"
+                        placeholder="Last name"
+                    />
+                    <button className="my-5 cursor-pointer bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded">
+                        Submit
+                    </button>
+                </section>
+                <button
+                    onClick={handleToggle}
+                    className="block mx-auto cursor-pointer bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-4 border border-green-500 hover:border-transparent rounded"
+                >
+                    Toggle
+                </button>
+            </main>
+        </HeaderFooterLayout>
+    );
+};
 
-                <div className="hidden md:block">
-                    <h3 className="capitalize text-3xl font-roboto-condensed font-bold text-white">
-                        Contact us
-                    </h3>
-                    <h4 className="text-xl">Drop us a quick message</h4>
-                    <div className="mt-2 flex flex-col text-hci-lila-dark">
-                        <input
-                            className="mt-4 p-2 w-4/5 opacity-80"
-                            placeholder="Your Name"
-                            type="text"
-                        />
-                        <input
-                            className="mt-4 p-2 w-4/5 opacity-80"
-                            placeholder="Your E-mail"
-                            type="text"
-                        />
-                        <textarea
-                            className="mt-4 p-2 resize-none opacity-80"
-                            placeholder="Your Message"
-                            cols="30"
-                            rows="8"
-                        ></textarea>
-                    </div>
-                </div>
-
-                <div>
-                    <h3 className="capitalize text-3xl font-roboto-condensed font-bold text-white">
-                        Sitemap
-                    </h3>
-                    <h4 className="text-xl">Explore our pages</h4>
-                    <ul className="mt-4 list-none font-medium text-white">
-                        <li className="whitespace-nowrap cursor-pointer">Home</li>
-                        <li className="whitespace-nowrap cursor-pointer mt-1">
-                            About us
-                        </li>
-                        <li className="whitespace-nowrap cursor-pointer mt-1">
-                            Products
-                        </li>
-                        <li className="whitespace-nowrap cursor-pointer mt-1">
-                            Blog
-                        </li>
-                        <li className="whitespace-nowrap cursor-pointer mt-1">
-                            Contact us
-                        </li>
-                        <li className="whitespace-nowrap cursor-pointer mt-1">
-                            Private
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            <p className="mt-12">Copyright @ 2021 FESB. All rights reserved.</p>
-        </main>
-    </section>
-);
-
-export default Footer;
+export default StateDemo;
 ```
 
-Za pune primjere responzivnosti u Tailwindu pogledajte našu gotovu implementaciju:
+Ako kliknemo na `Toggle` primijetit ćemo da se ne događa ništa 🤨  
+Ali ako otvorimo inspector vidimo da u konzoli imamo sljedeći ispis:
 
-https://github.com/mcagalj/next-course-app
+<p align='center'>
+<img src='./assets/console_sc.png'/>
+</p>
+
+To znači da se naš kod izvršava točno. Što se događa?  
+Commitajmo i odgovorit ćemo na to pitanje.
 
 > ✅ Commit  
 > `git add .`  
-> `git commit -m "Vjezba 3: Responsive Footer"`
+> `git commit -m "Vjezba 4: Add toggle to student list [WIP]"`
+
+### Što je React State?
+
+Što je React State pitanje je koje je odgovoreno mnogo puta. Odgovorit ćemo na to vječno pitanje još jedan put i sad, ali dajemo i linkove na druga objašnjenja (primjere).
+
+Naše detaljno objašnjenje [Ovdje](https://github.com/kula124/HCi_2020_Fresh/tree/project-4--state-and-multipage#react-concept)
+
+Službeni docs: [React Docs](https://reactjs.org/docs/faq-state.html)
+
+Prvo odgovorimo na pitanje zašto kod koji smo napisali ne radi. Primijetimo da je kod koji stvara HTML zapravo funkcija. U trenutku kad se pozvala ̨̨`toggle` vrijedost je `false`. Nakon toga mi mijenjamo tu vrijednost, ali ta funkcija se više ne poziva. Budući da se ne poziva, HTML koji je ona stvorila se ne mijenja. Kada bi se ta funkcija pozvala ponovno HTML bi se promijenio.
+
+Znači treba samo pozvati funkciju ponovno!  
+Zapravo, možemo i bolje od toga. Zamislimo samo da svaki put moramo ručno pozivati funkciju kad želimo promijeniti HTML. React nam zato daje jedan poseban dio svog API-a: **React state**. To je posebna varijabla koja kad se promijeni automatski ponovno poziva funkciju. Upravo takva varijabla ili više njih unutar komponente je **React component state**
+
+### Commit 4: Fix toggle state
+
+Naoružani novim znanjem popravimo naš kod. React `useState` API je dan [ovdje](https://reactjs.org/docs/hooks-state.html#declaring-a-state-variable), ali ukratko:
+
+1. Koristimo `useState` funkciju iz React paketa
+2. Funkcija vraća niz od dva elementa gdje je prvi element _state varijabla_, a druga je _state setter_ tj. funkcija koja mijenja state.
+
+Umjesto da koristimo `let shouldHideList` koristimo spomenuti state i umjesto da direktno mijenjamo taj state koristimo `setState(newValue)`. To je sve. Probajmo:
+
+```jsx
+import { useState } from 'react';
+...
+const StateDemo = () => {
+    const [shouldHideList, setShouldHideList] = useState(false);
+
+    const handleToggle = () => {
+        setShouldHideList(!shouldHideList);
+        console.log(shouldHideList);
+    };
+
+    if (shouldHideList) {
+        return <p className="w-min mx-auto min-w-max" >Sorry, studenti spavaju 😴 </p>;
+    }
+    ...
+}
+```
+
+Vrijednost `false` unutar `setState()` funkcije je početna vrijednost varijable.
+
+Kod sada radi :)  
+Međutim, možemo bolje. Umjesto da vratimo `<p>` probajmo ga vratiti umjesto liste. Koristeći ternarni operator `?` nad novom varijablom možemo vratiti ili listu ili poruku:
+
+```jsx
+const StateDemo = () => {
+    const [shouldHideList, setShouldHideList] = useState(false);
+
+    const handleToggle = () => {
+        setShouldHideList(!shouldHideList);
+        console.log(shouldHideList);
+    };
+
+    return (
+        <HeaderFooterLayout>
+            <main className="py-8">
+                <h1 className="text-center mt-5 mb-5 font-bold text-4xl underline">
+                    Welcome to state demo!
+                </h1>
+                {shouldHideList ? (
+                    <p className="w-min mx-auto min-w-max">
+                        Sorry studenti spavaju 😴
+                    </p>
+                ) : (
+                    <ul className="flex flex-col items-center justify-around">
+                        {studentsConstArray.map((el) => (
+                            <Student key={el.id} {...el} />
+                        ))}
+                    </ul>
+                )}
+                <section className="flex flex-col w-64 justify-center items-center my-0 mx-auto border-gray-500">
+                    <input
+                        className="border-b-2 outline-none mt-5 border-solid border-gray-500"
+                        type="text"
+                        placeholder="Name"
+                    />
+                    <input
+                        className="border-b-2 outline-none mt-5 border-solid border-gray-500"
+                        type="text"
+                        placeholder="Last name"
+                    />
+                    <button className="my-5 cursor-pointer bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded">
+                        Submit
+                    </button>
+                </section>
+                <button
+                    onClick={handleToggle}
+                    className="block mx-auto cursor-pointer bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-4 border border-green-500 hover:border-transparent rounded"
+                >
+                    Toggle
+                </button>
+            </main>
+        </HeaderFooterLayout>
+    );
+};
+```
+
+Fancy naziv za ovo je **Conditional Rendering**.
+
+> ✅ Commit  
+> `git add .`  
+> `git commit -m "Vjezba 4: Fix toggle state"`
+
+### Commit 5: Add new student [WIP]
+
+Zadatak nam je dodati novog studenta. Kao korisnici upišemo ime i prezime novog studenta i klikom na submit pojavi se u listi. Vidimo da lista radi map nad `studentsConstArray`. To je fiksan niz studenata definiran van komponente. Možemo gledati na to kao na niz kojeg nam vraća neki server.
+
+Za početak zanemarimo input i probajmo samo dodati nekog random sudenta u listu koristeći state čisto da vidimo da radi.
+
+Radimo isto što i za toggle.
+
+```jsx
+const StateDemo = () => {
+    const [shouldHideList, setShouldHideList] = useState(false);
+    const [students, setStudents] = useState(studentsConstArray);
+
+    const handleToggle = () => {
+        setShouldHideList(!shouldHideList);
+        console.log(shouldHideList);
+    };
+
+    const handleSubmit = () => {
+        const newStudent = {
+            id: students.length + 1,
+            name: 'Ivo',
+            lastName: 'Ivic',
+            imgSrc: '/profile.jpg',
+        };
+
+        students.push(newStudent);
+        setStudents(students);
+        console.log(students);
+    };
+
+    return (
+        <HeaderFooterLayout>
+            <main className="py-8">
+                <h1 className="text-center mt-5 mb-5 font-bold text-4xl underline">
+                    Welcome to state demo!
+                </h1>
+                {shouldHideList ? (
+                    <p className="w-min mx-auto min-w-max">
+                        Sorry studenti spavaju 😴
+                    </p>
+                ) : (
+                    <ul className="flex flex-col items-center justify-around">
+                        {students.map((el) => (
+                            <Student key={el.id} {...el} />
+                        ))}
+                    </ul>
+                )}
+                <section className="flex flex-col w-64 justify-center items-center my-0 mx-auto border-gray-500">
+                    <input
+                        className="border-b-2 outline-none mt-5 border-solid border-gray-500"
+                        type="text"
+                        placeholder="Name"
+                    />
+                    <input
+                        className="border-b-2 outline-none mt-5 border-solid border-gray-500"
+                        type="text"
+                        placeholder="Last name"
+                    />
+                    <button
+                        onClick={handleSubmit}
+                        className="my-5 cursor-pointer bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"
+                    >
+                        Submit
+                    </button>
+                </section>
+                <button
+                    onClick={handleToggle}
+                    className="block mx-auto cursor-pointer bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-4 border border-green-500 hover:border-transparent rounded"
+                >
+                    Toggle
+                </button>
+            </main>
+        </HeaderFooterLayout>
+    );
+};
+```
+
+> ⚠️ Pripazita da ste zamjenili `studentsConstArray.map()` sa `students.map()`
+
+Ako kliknemo na `submit` vidimo da se ne događa ništa 🤔  
+Ali ako kliknemo na `Toggle` pojavili su se novi studenti??  
+Zašto?
+
+Commit pa ću vam reći!
+
+> ✅ Commit  
+> `git add .`  
+> `git commit -m "Vjezba 4: Add new student [WIP]"`
+
+### SetState state comparison
+
+JavaScript je dynamic language što znači da su tipovi dinamički dodijeljeni. Jedini način da to radi kako treba je da su sve varijable (osim nekih) reference tj. pointeri na vrijednost. To znači da svaki put kad napišemo
+
+```js
+const arr = [];
+```
+
+mi stvaramo novi niz čiji je pointer `arr` tj. `arr` ne sadrži vrijednost niza nego pointer na niz. Prisjetimo se kako radi C :)
+
+```js
+const arr1 = [];
+const arr2 = arr1;
+const arr3 = [];
+
+console.log(arr1 === arr2);
+// true
+arr1.push(3);
+console.log(arr1 === arr2);
+// true
+
+console.log(arr1 === arr3 || arr2 === arr3);
+// false
+console.log([] === []);
+// false
+console.log({} === {});
+// false
+```
+
+Zašto su zadnja dva `false`? Jer JS stvara nove objekte i onda uspoređuje njihovu adresu (pointer), ne sadržaj.
+
+!!\***\*Ovo je jako bitno kod React-a\*\***!!
+
+`setState` ima jednu bitnu optimizaciju: ako je novi state jednak starom neće se izvršiti. Pogledajmo što smo napisali:
+
+```jsx
+const handleSubmit = () => {
+    const newStudent = {
+        id: students.length + 1,
+        name: 'Ivo',
+        lastName: 'Ivic',
+        imgSrc: '/profile.jpg',
+    };
+
+    students.push(newStudent);
+    // Iako se dodaje novi student, adresa niza je ista
+    setStudents(students);
+    // Što znači da React preskače setState
+    console.log(students);
+};
+```
+
+Na pitanje zašto se pojave studenti ako napravimo toggle sad bismo već trebali znati odgovor.
+
+<details>
+<summary>Tko ne zna i zna da ne zna... ili samo želi biti siguran :) </summary>
+
+Broj studenata se povećao, ali budući da se nije izvršio `setState` nije se ni ponovno pozvala funkcija tako da smo opet na istom problemu kao i na početku. Podatci su točni samo treba pozvati funkciju. Kad kliknemo na Toggle to se dogodi i pojave se novi studenti.
+
+</details>
+<br>
+
+### Commit 6: Add new students correctly
+
+Ne pozivamo push! Nikad ne smijemo mutirati React state van poziva `setState` funkcije. Umjesto toga stvaramo novi niz, kopiramo stari niz unutar njega i dodamo novog studenta. Svo ovo je jedna linija koda:
+
+```jsx
+const handleSubmit = () => {
+    const newStudent = {
+        id: students.length + 1,
+        name: 'Ivo',
+        lastName: 'Ivic',
+        imgSrc: '/profile.jpg',
+    };
+
+    setStudents([...students, newStudent]);
+};
+```
+
+<details>
+<summary>Cijeli kod</summary>
+
+```jsx
+import { useState } from 'react';
+import Image from 'next/image';
+import HeaderFooterLayout from '../layouts/HeaderFooterLayout';
+
+const studentsConstArray = [
+    {
+        id: 1,
+        name: 'Mate',
+        lastName: 'Matic',
+        imgSrc: '/profile.jpg',
+    },
+    {
+        id: 2,
+        name: 'Jure',
+        lastName: 'Juric',
+        imgSrc: '/profile.jpg',
+    },
+];
+
+const Student = ({ name, lastName, imgSrc }) => {
+    return (
+        <li className="flex flex-row relative items-center">
+            <section className="mr-5 w-24 mt-5 mb-5 flex-row justify-between flex items-center">
+                <p>{name}</p>
+                <p>{lastName}</p>
+            </section>
+            <Image
+                className="absolute right-3 top-3"
+                layout="fixed"
+                width="50px"
+                height="50px"
+                src={imgSrc}
+                alt="profile image"
+            />
+        </li>
+    );
+};
+
+const StateDemo = () => {
+    const [shouldHideList, setShouldHideList] = useState(false);
+    const [students, setStudents] = useState(studentsConstArray);
+
+    const handleToggle = () => {
+        setShouldHideList(!shouldHideList);
+        console.log(shouldHideList);
+    };
+
+    const handleSubmit = () => {
+        const newStudent = {
+            id: students.length + 1,
+            name: 'Ivo',
+            lastName: 'Ivic',
+            imgSrc: '/profile.jpg',
+        };
+
+        setStudents([...students, newStudent]);
+        console.log(students);
+    };
+
+    return (
+        <HeaderFooterLayout>
+            <main className="py-8">
+                <h1 className="text-center mt-5 mb-5 font-bold text-4xl underline">
+                    Welcome to state demo!
+                </h1>
+                {shouldHideList ? (
+                    <p className="w-min mx-auto min-w-max">
+                        Sorry studenti spavaju 😴
+                    </p>
+                ) : (
+                    <ul className="flex flex-col items-center justify-around">
+                        {students.map((el) => (
+                            <Student key={el.id} {...el} />
+                        ))}
+                    </ul>
+                )}
+                <section className="flex flex-col w-64 justify-center items-center my-0 mx-auto border-gray-500">
+                    <input
+                        className="border-b-2 outline-none mt-5 border-solid border-gray-500"
+                        type="text"
+                        placeholder="Name"
+                    />
+                    <input
+                        className="border-b-2 outline-none mt-5 border-solid border-gray-500"
+                        type="text"
+                        placeholder="Last name"
+                    />
+                    <button
+                        onClick={handleSubmit}
+                        className="my-5 cursor-pointer bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"
+                    >
+                        Submit
+                    </button>
+                </section>
+                <button
+                    onClick={handleToggle}
+                    className="block mx-auto cursor-pointer bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-4 border border-green-500 hover:border-transparent rounded"
+                >
+                    Toggle
+                </button>
+            </main>
+        </HeaderFooterLayout>
+    );
+};
+
+export default StateDemo;
+```
+
+</details>
+
+> ✅ Commit  
+> `git add .`  
+> `git commit -m "Vjezba 4: Add new student correctly"`
+
+### Commit 7: Input state
+
+Pozabavimo se inputima. Za svaki input stvaramo poseban state. Input ima dva propa koja koristimo:
+
+1. `value`: trenutna vrijednost
+2. `onChange`: callback funkcija oblika `(event) => {}` koja se poziva kad se promijeni `value`. Novi value se nalazi u `event.target.value`.
+
+Kako to znam?  
+Ovo nije vezano za React. Ova dva propa su dio HTML `<input>` definicije. Ono što je novo je spajanje `value` propa na React state. Bacite oko na W3.
+
+```jsx
+const StateDemo = () => {
+    const [shouldHideList, setShouldHideList] = useState(false);
+    const [students, setStudents] = useState(studentsConstArray);
+
+    const [nameInputValue, setNameInputValue] = useState('');
+    const [lastNameInputValue, setLastNameInputValue] = useState('');
+
+    const handleToggle = () => {
+        setShouldHideList(!shouldHideList);
+        console.log(shouldHideList);
+    };
+
+    const handleSubmit = () => {
+        const newStudent = {
+            id: students.length + 1,
+            name: nameInputValue,
+            lastName: lastNameInputValue,
+            imgSrc: '/profile.jpg',
+        };
+
+        setStudents([...students, newStudent]);
+        console.log(students);
+    };
+
+    return (
+        <HeaderFooterLayout>
+            <main className="py-8">
+                <h1 className="text-center mt-5 mb-5 font-bold text-4xl underline">
+                    Welcome to state demo!
+                </h1>
+                {shouldHideList ? (
+                    <p className="w-min mx-auto min-w-max">
+                        Sorry studenti spavaju 😴
+                    </p>
+                ) : (
+                    <ul className="flex flex-col items-center justify-around">
+                        {students.map((el) => (
+                            <Student key={el.id} {...el} />
+                        ))}
+                    </ul>
+                )}
+                <section className="flex flex-col w-64 justify-center items-center my-0 mx-auto border-gray-500">
+                    <input
+                        value={nameInputValue}
+                        onChange={(e) => setNameInputValue(e.target.value)}
+                        className="border-b-2 outline-none mt-5 border-solid border-gray-500"
+                        type="text"
+                        placeholder="Name"
+                    />
+                    <input
+                        value={lastNameInputValue}
+                        onChange={(e) => setLastNameInputValue(e.target.value)}
+                        className="border-b-2 outline-none mt-5 border-solid border-gray-500"
+                        type="text"
+                        placeholder="Last name"
+                    />
+                    <button
+                        onClick={handleSubmit}
+                        className="my-5 cursor-pointer bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"
+                    >
+                        Submit
+                    </button>
+                </section>
+                <button
+                    onClick={handleToggle}
+                    className="block mx-auto cursor-pointer bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-4 border border-green-500 hover:border-transparent rounded"
+                >
+                    Toggle
+                </button>
+            </main>
+        </HeaderFooterLayout>
+    );
+};
+```
+
+> ℹ️ Input ovdje je `controlled`! To znači da je njegov parent odgovoran za njegov `value` tj. `value` mu se prosljeđuje kao prop. Ponekad input može biti i `uncontrolled` tj. parent prosljeđuje samo `onChangeHandler` ili ništa. Ovi izrazi se često koriste kod UI Frameworka pa se nije loše upoznati s njima :)
+
+> ✅ Commit  
+> `git add .`  
+> `git commit -m "Vjezba 4: Input state"`
+
+### Commit 8: Input object state
+
+Pokazali smo state kao `boolean`, `string` i `array`. Budući da su `string` i `number` slični ostaje nam samo još object state. Pa pokažimo i to. Umjesto četiri state varijable koristimo jednu koja je object i sadrži 4 propertia (polja):
+
+```jsx
+const StateDemo = () => {
+    const [state, setState] = useState({
+        shouldHideList: false,
+        students: studentsConstArray,
+        nameInputValue: '',
+        lastNameInputValue: '',
+    });
+
+    const handleToggle = () => {
+        setState({
+            ...state, // kopiraj sve iz state objekta
+            shouldHideList: !state.shouldHideList, // i promijeni samo ono sto je potrebno
+        });
+    };
+
+    const handleSubmit = () => {
+        const newStudent = {
+            id: state.students.length + 1,
+            name: state.nameInputValue,
+            lastName: state.lastNameInputValue,
+            imgSrc: '/profile.jpg',
+        };
+
+        setState({
+            ...state,
+            students: [...state.students, newStudent],
+            nameInputValue: '',
+            lastNameInputValue: '',
+        });
+    };
+
+    return (
+        <HeaderFooterLayout>
+            <main className="py-8">
+                <h1 className="text-center mt-5 mb-5 font-bold text-4xl underline">
+                    Welcome to state demo!
+                </h1>
+                {state.shouldHideList ? (
+                    <p className="w-min mx-auto min-w-max">
+                        Sorry studenti spavaju 😴
+                    </p>
+                ) : (
+                    <ul className="flex flex-col items-center justify-around">
+                        {state.students.map((el) => (
+                            <Student key={el.id} {...el} />
+                        ))}
+                    </ul>
+                )}
+                <section className="flex flex-col w-64 justify-center items-center my-0 mx-auto border-gray-500">
+                    <input
+                        value={state.nameInputValue}
+                        onChange={(e) =>
+                            setState({ ...state, nameInputValue: e.target.value })
+                        }
+                        className="border-b-2 outline-none mt-5 border-solid border-gray-500"
+                        type="text"
+                        placeholder="Name"
+                    />
+                    <input
+                        value={state.lastNameInputValue}
+                        onChange={(e) =>
+                            setState({
+                                ...state,
+                                lastNameInputValue: e.target.value,
+                            })
+                        }
+                        className="border-b-2 outline-none mt-5 border-solid border-gray-500"
+                        type="text"
+                        placeholder="Last name"
+                    />
+                    <button
+                        onClick={handleSubmit}
+                        className="my-5 cursor-pointer bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"
+                    >
+                        Submit
+                    </button>
+                </section>
+                <button
+                    onClick={handleToggle}
+                    className="block mx-auto cursor-pointer bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-4 border border-green-500 hover:border-transparent rounded"
+                >
+                    Toggle
+                </button>
+            </main>
+        </HeaderFooterLayout>
+    );
+};
+
+export default StateDemo;
+```
+
+> ✅ Commit  
+> `git add .`  
+> `git commit -m "Vjezba 4: Input object state"`
+
+### Commit 8: Add filtering
+
+Filtriranje se dosta često koristi u React-u i dio je našeg seminarskog zadatka. Ovdje imamo listu sa studentima i input. Znači sve što nam je potrebno za napraviti filter :)
+
+Filter se sastoji od 4 dijela:
+
+1. Data source
+2. Filter funkcija
+3. Filtered data
+4. Clear filter
+
+Data source su početni podatci. To je u ovom slučaju lista studenata. Kad se filter ugasi onda se vraćamo na početne podatke. To su ujedno i podatci koje filtriramo.
+
+Filter funkcija je funkcija koja radi filtriranje. Najčešće ili prima niz ili se poziva nad nizom. Kod JS-a se poziva nad nizom isto kao i `.map()`. U JS-u vraća novi filtrirani niz, a prima _predikat_ (funkciju koja vraća _boolean_). Filtriranje se vrši na temelju filter inputa.
+
+Nakon filtiranja spremamo novi niz u state. Taj novi state se koristi za rendering umjesto originalnih podataka.
+
+Kada želimo ugasiti filter onda trebamo:
+
+1. Staviti `Filtered Data` da bude jednak `Data sourceu`
+2. Isprazniti filter input
+
+U našoj implementaciji taj button se prikaže samo ako filter input nije prazan. Ako jest, onda ga baš i nema smisla prikazivati.
+
+Dakle:
+
+1. Dodajemo još jedan input za filter. Dodajemo i container za button
+2. Dodajemo novi state za filter input i filtered data
+3. Dodajemo Handler za filter input
+4. Dodajemo Handle za clear button
+5. Ako je lista prazna prikažemo poruku
+
+Voilà!
+
+```jsx
+const StateDemo = () => {
+    const [state, setState] = useState({
+        shouldHideList: false,
+        students: studentsConstArray,
+        nameInputValue: '',
+        lastNameInputValue: '',
+    });
+
+    const [filteredStudents, setFilteredStudents] = useState(state.students);
+    const [filterValue, setFilterValue] = useState('');
+    const [showShowClearButton, setShowClearButton] = useState(false);
+
+    const handleFilterChange = (e) => {
+        const { value } = e.target;
+        setFilterValue(value);
+        if (value.length > 0) {
+            setShowClearButton(true);
+        } else {
+            setShowClearButton(false);
+        }
+
+        const filteredStudents = state.students.filter((student) => {
+            return (
+                student.name.toLowerCase().includes(value.toLowerCase()) ||
+                student.lastName.toLowerCase().includes(value.toLowerCase())
+            );
+        });
+
+        setFilteredStudents(filteredStudents);
+    };
+
+    const handleClearFilter = () => {
+        setFilterValue('');
+        setShowClearButton(false);
+        setFilteredStudents(state.students);
+    };
+
+    const handleToggle = () => {
+        setState({
+            ...state, // kopiraj sve iz state objekta
+            shouldHideList: !state.shouldHideList, // i promijeni samo ono sto je potrebno
+        });
+    };
+
+    const handleSubmit = () => {
+        const newStudent = {
+            id: state.students.length + 1,
+            name: state.nameInputValue,
+            lastName: state.lastNameInputValue,
+            imgSrc: '/profile.jpg',
+        };
+
+        setState({
+            ...state,
+            students: [...state.students, newStudent],
+            nameInputValue: '',
+            lastNameInputValue: '',
+        });
+
+        setFilteredStudents([...filteredStudents, newStudent]);
+    };
+
+    return (
+        <HeaderFooterLayout>
+            <main className="py-8">
+                <h1 className="text-center mt-5 mb-5 font-bold text-4xl underline">
+                    Welcome to state demo!
+                </h1>
+                {state.shouldHideList || filteredStudents.length <= 0 ? (
+                    <p className="w-min mx-auto min-w-max">
+                        Sorry studenti spavaju 😴
+                    </p>
+                ) : (
+                    <ul className="flex flex-col items-center justify-around">
+                        {filteredStudents.map((el) => (
+                            <Student key={el.id} {...el} />
+                        ))}
+                    </ul>
+                )}
+                <section className="flex flex-col w-64 justify-center items-center my-0 mx-auto border-gray-500">
+                    <input
+                        value={state.nameInputValue}
+                        onChange={(e) =>
+                            setState({ ...state, nameInputValue: e.target.value })
+                        }
+                        className="border-b-2 outline-none mt-5 border-solid border-gray-500"
+                        type="text"
+                        placeholder="Name"
+                    />
+                    <input
+                        value={state.lastNameInputValue}
+                        onChange={(e) =>
+                            setState({
+                                ...state,
+                                lastNameInputValue: e.target.value,
+                            })
+                        }
+                        className="border-b-2 outline-none mt-5 border-solid border-gray-500"
+                        type="text"
+                        placeholder="Last name"
+                    />
+                    <button
+                        onClick={handleSubmit}
+                        className="my-5 cursor-pointer bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"
+                    >
+                        Submit
+                    </button>
+                </section>
+                <button
+                    onClick={handleToggle}
+                    className="block mx-auto cursor-pointer bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-4 border border-green-500 hover:border-transparent rounded"
+                >
+                    Toggle
+                </button>
+                <section className="min-w-80 flex w-full justify-center items-center mt-12">
+                    <input
+                        value={filterValue}
+                        onChange={handleFilterChange}
+                        className="border-b-2 outline-none border-solid border-gray-500"
+                        type="text"
+                        placeholder="Filter input"
+                    />
+                    {showShowClearButton && (
+                        <button
+                            onClick={handleClearFilter}
+                            className="ml-4 rounded-md border-2 border-red-400
+                            text-red-500 py-0.5 px-4"
+                        >
+                            Clear
+                        </button>
+                    )}
+                </section>
+            </main>
+        </HeaderFooterLayout>
+    );
+};
+```
+
+> ✅ Commit  
+> `git add .`  
+> `git commit -m "Vjezba 4: Add filtering"`
