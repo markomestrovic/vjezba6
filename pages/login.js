@@ -1,26 +1,11 @@
 import { useEffect, useState } from 'react';
 
 import Spinner from '../components/Spinner';
+import api from '../api';
+
 import { safeLocalStorage } from '../helpers';
 
 import styles from '../styles/login.module.scss';
-
-const users = [
-    {
-        id: 1,
-        username: 'admin',
-        password: 'admin',
-        name: 'Admin',
-        email: 'admin@example.com',
-    },
-    {
-        id: 2,
-        username: 'user',
-        password: 'user',
-        name: 'User',
-        email: 'user@example.com',
-    },
-];
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -39,22 +24,19 @@ const Login = () => {
 
         setLoading(true);
 
-        setTimeout(() => {
-            const user = users.find(
-                (user) => user.username === email && user.password === password
-            );
-            if (user) {
-                setError('');
-                setLoading(false);
-                alert('Login successful!');
-                setIsLoggedIn(true);
+        await api
+            .login(email, password)
+            .then(({ token }) => {
+                safeLocalStorage.setItem('token', token);
                 safeLocalStorage.setItem('isLoggedIn', true);
-                safeLocalStorage.setItem('user', JSON.stringify(user));
-            } else {
-                setError('Invalid credentials');
-                setLoading(false);
-            }
-        }, 1000);
+                setIsLoggedIn(true);
+                setError('');
+            })
+            .catch((err) => {
+                setError(err.message);
+            });
+
+        setLoading(false);
     };
 
     return (
@@ -103,7 +85,7 @@ const Login = () => {
                         onClick={() => {
                             setIsLoggedIn(false);
                             safeLocalStorage.removeItem('isLoggedIn');
-                            safeLocalStorage.removeItem('user');
+                            safeLocalStorage.removeItem('token');
                         }}
                         className={styles.submitButton}
                     >
