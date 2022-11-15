@@ -30,6 +30,22 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        setLoading(true);
+
+        setTimeout(() => {
+            const user = users.find(
+                (user) => user.username === email && user.password === password
+            );
+            if (user) {
+                setError('');
+                setLoading(false);
+                alert('Login successful!');
+            } else {
+                setError('Invalid credentials');
+                setLoading(false);
+            }
+        }, 1000);
     };
 
     return (
