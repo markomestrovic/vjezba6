@@ -49,6 +49,7 @@ const Login = () => {
                 alert('Login successful!');
                 setIsLoggedIn(true);
                 safeLocalStorage.setItem('isLoggedIn', true);
+                safeLocalStorage.setItem('user', JSON.stringify(user));
             } else {
                 setError('Invalid credentials');
                 setLoading(false);
@@ -102,6 +103,7 @@ const Login = () => {
                         onClick={() => {
                             setIsLoggedIn(false);
                             safeLocalStorage.removeItem('isLoggedIn');
+                            safeLocalStorage.removeItem('user');
                         }}
                         className={styles.submitButton}
                     >
