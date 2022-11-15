@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import Spinner from '../components/Spinner';
+import { safeLocalStorage } from '../helpers';
 
 import styles from '../styles/login.module.scss';
 
@@ -20,14 +21,6 @@ const users = [
         email: 'user@example.com',
     },
 ];
-
-const safeLocalStorage = {
-    getItem: (key) => typeof window !== 'undefined' && localStorage.getItem(key),
-    setItem: (key, value) =>
-        typeof window !== 'undefined' && localStorage.setItem(key, value),
-    removeItem: (key) =>
-        typeof window !== 'undefined' && localStorage.removeItem(key),
-};
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -104,6 +97,17 @@ const Login = () => {
                     </section>
                 )}
                 {error && <p className={styles.error}>{error}</p>}
+                {isLoggedIn && (
+                    <button
+                        onClick={() => {
+                            setIsLoggedIn(false);
+                            safeLocalStorage.removeItem('isLoggedIn');
+                        }}
+                        className={styles.submitButton}
+                    >
+                        Logout
+                    </button>
+                )}
             </section>
         </main>
     );
