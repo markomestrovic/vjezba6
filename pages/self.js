@@ -1,19 +1,35 @@
-import Link from 'next/link';
 import { useEffect, useState } from 'react';
+
+import Link from 'next/link';
+import api from '../api';
 import HeaderFooterLayout from '../layouts/HeaderFooterLayout';
 
 const Self = () => {
     const [currentUser, setCurrentUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-
-        if (storedUser) {
-            setCurrentUser(JSON.parse(storedUser));
+        if (safeLocalStorage.getItem('isLoggedIn') === 'true') {
+            setIsLoggedIn(true);
         }
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+            return;
+        }
+
+        api.self(token).then(({ user }) => {
+            setLoading(false);
+            setCurrentUser(user);
+        });
     }, []);
 
-    if (!currentUser) {
+    if (loading) {
+        return null;
+    }
+
+    if (!isLoggedIn || !currentUser) {
         return (
             <div className="h-screen w-screen bg-gray-100 flex items-center">
                 <div className="container flex flex-col md:flex-row items-center justify-center px-5 text-gray-700">
