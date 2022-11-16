@@ -3,18 +3,14 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import api from '../api';
 import HeaderFooterLayout from '../layouts/HeaderFooterLayout';
+import useAuth from '../hooks/useAuth';
 
 const Self = () => {
+    const { token } = useAuth();
     const [currentUser, setCurrentUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     useEffect(() => {
-        if (safeLocalStorage.getItem('isLoggedIn') === 'true') {
-            setIsLoggedIn(true);
-        }
-
-        const token = localStorage.getItem('token');
         if (!token) {
             return;
         }
@@ -23,13 +19,13 @@ const Self = () => {
             setLoading(false);
             setCurrentUser(user);
         });
-    }, []);
+    }, [token]);
 
     if (loading) {
         return null;
     }
 
-    if (!isLoggedIn || !currentUser) {
+    if (!token || !currentUser) {
         return (
             <div className="h-screen w-screen bg-gray-100 flex items-center">
                 <div className="container flex flex-col md:flex-row items-center justify-center px-5 text-gray-700">
