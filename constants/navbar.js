@@ -4,5 +4,5 @@ export const navigationItems = [
     { label: 'Showcase', path: '' },
     { label: 'Blog', path: '' },
     { label: 'Sign in', path: '/login' },
-    { label: 'Me', path: '/self' },
+    { label: 'Me', path: '/self', needsAuth: true },
 ];
