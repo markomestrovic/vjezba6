@@ -1,783 +1,380 @@
 # HCI-vježbe-2022-2023
 
-## Vježba 5: Login and hooks
+## Vježba 6: SSG / SSR / CSR
 
-U prethodnim vježbama upoznali smo React state, čemu služi i koje vrste state-a postoje. Naučili smo manipulirati state-om za stvaranje interaktivne aplikacije. Danas idemo još jedan korak dalje i implementiramo Login proces.
+Ova vježba je više fokusirana na NextJS, ali i na tipove renderinga (stvaranja HTML-a) web stranica.
 
-Za seminarske radove Login nije neophodan, ali potičemo studente da ga pokušaju implementirati zbog iskustva.
+### Povijest: prvo je bio HTML i onda PHP
 
-Prvo radimo mockup implementaciju i nakon toga radimo pravu implementaciju koristeći JWT token.
+Jednom davno imali smo samo HTML, CSS i JS. Moderni browseri, slično kao i arhaični, još uvijek razume samo ta tri formata. Progameri su uskoro željeli dinamičan sadržaj; tablice koje se mijenjaju ovisno o podatcima i sl. Onda je došao PHP koji je mogao pisati HTML kod direktno na serveru unutar HTML filea.
 
-### Commit 1: Implement mock login logic
+Recimo da imamo bazu podataka koja sadrži korisnike i želimo prikazati tablicu korisnika. PHP je jezik koji se može povezati na bazu podataka, povući korisnike i stvoriti HTML, npr. `<ul>` ili `<table>` i ubaciti korisnike. Taj gotovi HTML onda dolazi u browser. Tu je jako bitno sljedeće: **PHP kod se izvršava na serveru. Tek gotovi HTML se šalje u browser**. To je Server Side Rendering. To nije nov koncept.
 
-Dan nam je početni kod u `/pages/login`. Koristeći znanje o state-u probajmo završiti kod. Potrebno je implementirati `hanleSubmit` funkciju:
+<p align='center'>
+    <img src='./public/vjezba6/php_enample.png'>
+</p>
 
--   Kad login process krene stavljamo loading na `true`
--   Provjeravamo postoji li korisnik
--   Ako korisnik postoji login je uspješan
--   U suprotnom stavljamo error poruku
--   Login na `false`
+Ako želimo imati više stranica jednostavno napišemo više HTML datoteka i stavimo ih u različite pod foldere. Tako nastaju URL pathovi poput `server-name.com/posts.html` ili `server-name/login.html`.
 
-Koristimo `setTimeout` da dočaramo Loading
+### Client side rendering i Single page application
+
+Pisanje stvari u PHP-u ima i svoje mane. Rendering logika je vezana uz business logiku, view je spojen na model (jako puno SQLi rupa) i programeri nisu baš voljeli PHP zbog sintakse.
+
+Tu dolaze razni JS libovi i frameworkci među kojima je i React. React ima drugačiji pristup. Kod SSR-a server odradi stvaranje HTML-a što znači da browser dobije cijeli HTML page odmah. Kod React-a browser dobije prazan HTML sa samo jednim `<div id='root'>` elementom u bodyu. React onda traži element koji ima `id=root` i "kači" se na njega (mount). U tom trenutku React preuzima kontrolu nad stranicom i stvara HTML kod unutar tog elementa. To je kod koji smo pisali do sad. Zato sve React funkcije vraćaju HTML.
+
+Više stranica u Reactu je "laž". Zapravo, mi smo uvijek na istoj stranici, samo ovisno o URL-u React prikaže (rendera) drugačiji HTML. To se postiže pomoću _React Routera_ koji koristi `<Switch /> `. Switch radi isto kao i switch u JS-u: za svaki `case` koji je URL path, rendera drugi HTML container tj. drugi page, ali izvorni HTML page se nikad ne mijenja. Sve se to događa u istom HTML fileu kojeg nam je server dao na početku. Ovakve se aplikacije zovu **Single page application** ili **Client side routing**.
+
+Mana ovog pristupa je velika ovisnost o JS-u (primijetite da je svaki file JS), SEO ne postoji ili se radi client-side što ga čini beskorisnim za web botove, teret na strani klijenta, bloated JS i spore aplikacije, nema CDN cache itd.
+
+<p align='center'>
+<img src='./public/vjezba6/CSR.png'>
+</p>
+
+### Reinventing the wheel: NextJS Server Side Rendering i Generation
+
+NextJS radi kombinaciju oba pristupa i generalno se dijeli u:
+
+-   Client side rendering (isto kao CRA)
+
+i dva tipa server side renderinga:
+
+-   Static Site Generation (SSG)
+-   Server Side Rendering (SSR)
+-   Incremental Static Regeneration (ISR) (kombinacija prethodna dva)
+
+NextJS dopušta korištenje svih u jednom projektu. Neke stranice mogu biti SSG (npr. about, naslovnica, help), neke SSG (npr. tablice sa sadržajem koji se ne ažurira prečesto) i CSR za stranice gdje SEO nije bitan i koje se ažuriraju uživo.
+
+#### SSG
+
+Ovo je default mode. Stranice se stvaraju jedan put kad se projekt **builda**. Na build možemo gledati kao i na **compile** u C-u ili Javi. To je korak u kojem se source kod pretvara u stranicu. Ako nešto želimo promijeniti nakon, trebamo ponovno pokrenuti complile. Zbog toga je ova metoda najbolja za nepromjenjive stranice (naslovnica, blogovi i sl.). SSG nam daje spreman HTML, CSS i JS koji možemo prebaciti na USB, server ili nešto drugo.
+
+#### SSR
+
+Jedina razlika je što se SSR događa na svaki request dok se SSG događa at build time što može biti jednom i nikad ili par puta mjesečno / godišnje ovisno o potrebi.
+
+<p align='center'>
+    <img src='./public/vjezba6/SSR.png'>
+</p>
+
+#### ISR
+
+Kombinacija prethodna dva. Koristimo SSG, ali svako nekoliko dana ili requestova napravimo SSR i spremimo rezultat kao SSG.
+
+#### Više:
+
+[SSR vs SSG](https://tsh.io/blog/ssr-vs-ssg-in-nextjs/)
+
+[Next Docs](https://nextjs.org/docs/basic-features/pages)
+
+## Start
+
+U ovoj vježbi napravit ćemo SSG i SSR stranice s dinamičkim pathovima. Razlika je u ovom slučaju dosta mala.
+
+### Commit 1: List all assets page
+
+Ova stranica će izlistati sve slike u assets folderu. Razmislimo kako to radi. Unutar browsera nije moguće ući u folder koji se nalazi na računalu i prikazati nešto. Ovo je moguće samo na serveru.
+
+Treba nam:
+
+1. Novi page, nazovimo ga `ssr-images.js`
+2. Treba reći NextJS-u da želimo SSG (`export getStaticProps`)
+3. Trebamo izlistati folder i dati slike u komponentu da se mogu prikazati
+
+Unutar `getStaticProps` možemo izvršiti server-side kod i njegove rezultate poslati u komponentu kao props. Taj kod može biti čitanje diska (kao ovdje), čitanje Markdown/JSON/Text datoteka, pozivanje servera itd.
+
+U ovom primjeru čitamo slike iz foldera i prikazujemo ih:
 
 ```jsx
-const handleSubmit = async (e) => {
-    e.preventDefault();
+export async function getStaticProps() {
+    const images = fs.readdirSync('public/vjezba6');
 
-    setLoading(true);
-
-    setTimeout(() => {
-        const user = users.find(
-            (user) => user.username === email && user.password === password
-        );
-        if (user) {
-            setError('');
-            setLoading(false);
-            alert('Login successful!');
-        } else {
-            setError('Invalid credentials');
-            setLoading(false);
-        }
-    }, 1000);
-};
-```
-
-### Commit 2: Store login state [WIP]
-
-Nakon što se korisnik logira želimo spremiti činjenicu da je logiran i prikazati poruku:
-
--   Stvaramo novi state `isLoggedIn`
--   Ako je `true` korisnik je logiran i pokažemo poruku
-
-```jsx
-const Login = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        setLoading(true);
-
-        setTimeout(() => {
-            const user = users.find(
-                (user) => user.username === email && user.password === password
-            );
-            if (user) {
-                setError('');
-                setLoading(false);
-                alert('Login successful!');
-                setIsLoggedIn(true);
-            } else {
-                setError('Invalid credentials');
-                setLoading(false);
-            }
-        }, 1000);
+    return {
+        props: {
+            images,
+        },
     };
-
-    return (
-        <main className={styles.page}>
-            <section className={styles.content}>
-                <h1 className={styles.title}>
-                    {isLoggedIn ? 'You are logged in!' : 'Log in'}
-                </h1>
-                {!isLoggedIn && (
-                    <section className={styles.form}>
-                        <div className={styles.inputWrapper}>
-                            <input
-                                value={email}
-                                type="email"
-                                id="email"
-                                className={styles.emailInput}
-                                placeholder="Email or username"
-                                onChange={(e) => setEmail(e.target.value)}
-                            />
-                        </div>
-                        <div className={styles.inputWrapper}>
-                            <input
-                                value={password}
-                                type="password"
-                                id="password"
-                                placeholder="Password"
-                                className={styles.passwordInput}
-                                onChange={(e) => setPassword(e.target.value)}
-                            />
-                        </div>
-                        {loading ? (
-                            <Spinner />
-                        ) : (
-                            <button
-                                onClick={handleSubmit}
-                                className={styles.submitButton}
-                            >
-                                Login
-                            </button>
-                        )}
-                    </section>
-                )}
-                {error && <p className={styles.error}>{error}</p>}
-            </section>
-        </main>
-    );
-};
-```
-
-Čini se da radi. Što se dogodi kad napravimo refresh?
-
-Kako to riješiti?
-
-> ✅ Commit  
-> `git add .`  
-> `git commit -m "Vjezba 5: Store login state"`
-
-### Commit 2: Actually store loggedIn state [WIP]
-
-React state je **ephemeral** što je cool grčka riječ za kratkotrajan tj. živi u memoriji. Da bi se sačuvao kroz refresh, treba trajno spremište: browser storage.
-
-Browser nam daje API za trajno spremanje stvari:
-[localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage)
-
-To je key-value-par store koji prima samo jednostavne vrijednosti. Znači da ako želimo spremiti objekt treba ga spremiti kao JSON. Međutim, nama je dovoljan _bool_.
-
-Ako je login uspješan spremamo ključ `isLoggedIn` kao `true`.
-
-Trebamo:
-
--   Nakon logina staviti `localStorage.isLoggedin` na `true`
--   Na početku povući `loggedIn` iz LS kao početnu vrijednost
-
-```jsx
-...
-    const [isLoggedIn, setIsLoggedIn] = useState(
-        localStorage.getItem('isLoggedIn') === 'true'
-    );
-...
-
-if (user) {
-    setError('');
-    setLoading(false);
-    alert('Login successful!');
-    setIsLoggedIn(true);
-    localStorage.setItem('isLoggedIn', true);
 }
 ```
 
-I sad imamo error:
-
-```
-ReferenceError: localStorage is not defined
-```
-
-Razlog ovog je **NextJS**
-
 > ✅ Commit  
 > `git add .`  
-> `git commit -m "Vjezba 5: Actually store loggedIn state [WIP]"`
+> `git commit -m "Vjezba 6: List all assets page"`
 
-### Commit 3: Actually store loggedIn state fixed
+### Commit 2: Dynamic pages
 
-Sljedeći link objašnjava što se događa.
+Dosad svaki page nam ima ime i sadržaj. Što ako imamo stranice koje se trebaju stvoriti dinamički? Recimo da imamo webshop. Stranica za pregled artikla izgleda uvijek isto, ali se mijenja naziv artika, slike, opis, cijena i sl. Zapravo, možemo reći da imamo neki template unutar kojeg se mijenja samo sadržaj.
 
-https://developer.school/snippets/react/localstorage-is-not-defined-nextjs
+Budući da je NextJS SSR znači li to da trebamo kopirati kod za svaki artikal posebno?  
+No.
 
-NextJS je server side rendering framework. Budući da server nije browser, a localStorage je browser API onda je logično da localStorage ne postoji dok se izvršava serverski dio koda.
+Za ovaj slučaj možemo koristiti CSR tako da dohvatimo JSON koji nam treba kad se React učita (`onMount`) i dohvatimo podatke koje trebamo i prikažemo stranicu. Isto možemo napraviti na server sa SSR-om. Je li to moguće za SSG? Je!
 
-Jednom kad se aplikacija učita i dođe do klijenta, `localStorage` postoji. Kao što link kaže, postoje dva pristupa:
+**DOCS:**  
+https://nextjs.org/learn/basics/dynamic-routes/setup
 
--   Provjerimo jesmo li na serveru tako što provjerimo postoji li `window` što je browser object tj. `typeof window !== 'undefined'`
--   Čekamo da aplikacija dođe do klijenta. Znamo da je aplikacija na klijentu ako se dogodi `React mount event`. Funkcija `useEffect` se tad pozove.
-
-Mi ćemo napraviti oboje.
+Napravimo jedan dynamic page u `pages/blog`. Damo mu naziv npr. `[someId].js` i sljedeći sadržaj:
 
 ```jsx
-const safeLocalStorage = {
-    getItem: (key) => typeof window !== 'undefined' && localStorage.getItem(key),
-    setItem: (key, value) =>
-        typeof window !== 'undefined' && localStorage.setItem(key, value),
-    removeItem: (key) =>
-        typeof window !== 'undefined' && localStorage.removeItem(key),
-};
+import { useRouter } from 'next/router';
 
-const Login = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-    useEffect(() => {
-        setIsLoggedIn(safeLocalStorage.getItem('isLoggedIn') === 'true');
-    }, []);
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        setLoading(true);
-
-        setTimeout(() => {
-            const user = users.find(
-                (user) => user.username === email && user.password === password
-            );
-            if (user) {
-                setError('');
-                setLoading(false);
-                alert('Login successful!');
-                setIsLoggedIn(true);
-                safeLocalStorage.setItem('isLoggedIn', true);
-            } else {
-                setError('Invalid credentials');
-                setLoading(false);
-            }
-        }, 1000);
-    };
+const SomeBlogPost = () => {
+    const router = useRouter();
 
     return (
-        <main className={styles.page}>
-            <section className={styles.content}>
-                <h1 className={styles.title}>
-                    {isLoggedIn ? 'You are logged in!' : 'Log in'}
-                </h1>
-                {!isLoggedIn && (
-                    <section className={styles.form}>
-                        <div className={styles.inputWrapper}>
-                            <input
-                                value={email}
-                                type="email"
-                                id="email"
-                                className={styles.emailInput}
-                                placeholder="Email or username"
-                                onChange={(e) => setEmail(e.target.value)}
-                            />
-                        </div>
-                        <div className={styles.inputWrapper}>
-                            <input
-                                value={password}
-                                type="password"
-                                id="password"
-                                placeholder="Password"
-                                className={styles.passwordInput}
-                                onChange={(e) => setPassword(e.target.value)}
-                            />
-                        </div>
-                        {loading ? (
-                            <Spinner />
-                        ) : (
-                            <button
-                                onClick={handleSubmit}
-                                className={styles.submitButton}
-                            >
-                                Login
-                            </button>
-                        )}
-                    </section>
-                )}
-                {error && <p className={styles.error}>{error}</p>}
-            </section>
-        </main>
+        <h1 className="text-2xl">
+            HI! You are on{' '}
+            <span className="text-red-500">{router.query.someId}</span>
+        </h1>
     );
 };
+
+export default SomeBlogPost;
 ```
+
+Ako odemo na `localhost:3000/blog/nesto` dobit ćemo odgovarajući page.
+
+Sve što treba napraviti sad je dohvatiti sadržaj bloga i vratiti ga za svaki page. Ovo je dobar case za SSR!
+
+Trenutno ovo je CSR jer koristimo `useRouter` koji je ReactHook.
+
+Napravimo SSR!
 
 > ✅ Commit  
 > `git add .`  
-> `git commit -m "Vjezba 5: Actually store loggedIn state fixed"`
+> `git commit -m "Vjezba 6: Dynamic pages"`
 
-### Commit 4: Add logout button and create helper file
+### Commit 3: Dynamic pages SSR
 
-Dodat ćemo logout button:
+Želimo SSR, znači da mičemo router i koristimo posebnu NextJS funkciju za SSR: `getServerSideProps`. Exportamo je iz datoteka gdje name treba i definiramo logiku unutar nje.
+
+Njen parametar je `Context` koji sadrži URL parametre i query. Za sad želimo samo parametar.
+
+Parametar ima `key` koje je jednak imenu datoteke (`someId`) unutar \[zagrada].
+
+Nakon što dobijem taj parametar moramo vratiti objekt koji ima key `props`, a njegov sadržaj je upravo props naše komponente!
 
 ```jsx
+const SomeBlogPost = ({ someId }) => {
+    return (
+        <h1 className="text-2xl">
+            HI! You are on <span className="text-red-500">{someId}</span>
+        </h1>
+    );
+};
+
+export default SomeBlogPost;
+
+export function getServerSideProps(context) {
+    return {
+        props: {
+            someId: context.params.someId,
+        },
+    };
+}
+```
+
+Ako probamo unijeti neki URL param vidjet ćemo da ima isti efekt kao i prije.
+
+> ✅ Commit  
+> `git add .`  
+> `git commit -m "Vjezba 6: Dynamic pages: SSR"`
+
+### Commit 4: Dynamic pages SSG
+
+Budući da je SSG prebuild, a URL je dinamičan, na prvu se ova kombinacija čini nemogućom. Bila bi da nema jedne pomoćne funkcije koju nam daje NextJS koja se zove `getStaticPaths`. Ta funkcija nam daje mogućnost stvaranja liste stranica koje želimo u SSG-u unaprijed. Svaki URL koji je van te liste je 404. Dakle:
+
+1. Definiramo listu stranica koju ćemo dodat u SSG
+2. Sve što nije SSG je not found 404
+3. Za svaki definirani path dohvatimo neke podatke (sljedeći commit, za sad opet samo parametar)
+
+Što se tiče implementacije za početak mijenjamo `getServerSideProps` sa `getStaticProps`.
+
+Ako pokušamo pristupiti sad dobit ćemo error. Razlog je jednostavan: Next ne zna koliko stranica treba unaprijed stvoriti.
+
+SSR je radio tako da kad dođe zahtjev Next ga uzima i računa `props`. Međutim, SSG se poziva prije nego je ijedan zahtjev ikad došao na server, tj. prije nego je site objavljen. Koje parametre može očekivati? Realno, apsolutno sve kombinacije slova i brojeva koji postoje. Taj build bi trajao jako dugo :)
+
+Funkcija `getStaticPaths` definira niz dozvoljenih parametara tj. niz stranica za prebuild.
+
+Format koji se vraća je:
+
+```js
 {
-    isLoggedIn && (
-        <button
-            onClick={() => {
-                setIsLoggedIn(false);
-                safeLocalStorage.removeItem('isLoggedIn');
-            }}
-            className={styles.submitButton}
-        >
-            Logout
-        </button>
-    );
+    paths: [
+        {
+            params: {
+                fileName: 'param-value',
+            },
+        },
+    ];
 }
 ```
 
-I novi file gdje ćemo maknuti `safeLocalStorage`.  
-Stvaramo `helpers.js` u rootu:
+Naša bi bila:
 
 ```jsx
-export const safeLocalStorage = {
-    getItem: (key) => typeof window !== 'undefined' && localStorage.getItem(key),
-    setItem: (key, value) =>
-        typeof window !== 'undefined' && localStorage.setItem(key, value),
-    removeItem: (key) =>
-        typeof window !== 'undefined' && localStorage.removeItem(key),
-};
-```
-
-Napravimo i import u `login.js`.
-
-> ✅ Commit  
-> `git add .`  
-> `git commit -m "Vjezba 5: Add logout button and create helper file"`
-
-### Commit 5: Save object with boolean
-
-Iako smo logirani, `/self` page nam ne dopušta pristup. Razlog je taj što `/self` traži objekt `user` u _localStorageu_. Dodajmo ga.
-
-> Local storage ne može direktno spremiti object. Potrebno ga je prvo serijalizirati u JSON.
-
-```jsx
-if (user) {
-    setError('');
-    setLoading(false);
-    alert('Login successful!');
-    setIsLoggedIn(true);
-    safeLocalStorage.setItem('isLoggedIn', true);
-    safeLocalStorage.setItem('user', JSON.stringify(user));
-}
-...
-
-onClick={() => {
-    setIsLoggedIn(false);
-    safeLocalStorage.removeItem('isLoggedIn');
-    safeLocalStorage.removeItem('user');
-}}
-```
-
-> ✅ Commit  
-> `git add .`  
-> `git commit -m "Vjezba 5: Save object with boolean"`
-
-### Commit 6: Do the real login
-
-Što se tiče potreba seminarskog rada mock login je dovoljan. U nastavku je dan pravi login implementiran pomoću JWT tokena.
-
-JWT je **Json Web Token** i koristi se za login. Za razliku od **session cookiea**, JWT ne traži pohranu ičega u bazi podataka. **JWT** je objekt koji sadrži JSON podatke po našem izboru. Ono što je tu bitno je da:
-
--   JWT stvara, puni i potpisuje server
--   JWT ima expire time
--   JWT je nepromjenjiv što znači da može sadržavati podatke o korisniku-najčešće to bude id
--   JWT je dan clientu
--   Server ne može poništiti JWT (može ga samo blacklistat)
-
-Login proces je sljedeći:
-
-1. Klijent zove `/login` API rutu i šalje email password combo
-2. Server provjerava validnost podataka i zahtjeva
-3. Ako je sve ok, server stvara JWT i šalje ga klijentu
-4. Klijent sad može pristupiti zaštićenim resursima koristeći JWT kao propusnicu (u našem primjeru `/self` rutu)
-5. Server može znati koji korisnik radi zahtjev tako da pročita JWT
-6. Bilo kakva modifikacija JWT-a učinit će token nevažećim što će server lako detektirati
-
-U `api.js` fileu imamo spreman REST client, a u `pages/api/login.js` logiku koja radi login.
-
-Trebamo samo zamjeniti mock logiku sa pravom:
-
-```jsx
-import { useEffect, useState } from 'react';
-
-import Spinner from '../components/Spinner';
-import api from '../api';
-
-import { safeLocalStorage } from '../helpers';
-
-import styles from '../styles/login.module.scss';
-
-const Login = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-    useEffect(() => {
-        setIsLoggedIn(safeLocalStorage.getItem('isLoggedIn') === 'true');
-    }, []);
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        setLoading(true);
-
-        await api
-            .login(email, password)
-            .then(({ token }) => {
-                safeLocalStorage.setItem('token', token);
-                safeLocalStorage.setItem('isLoggedIn', true);
-                setIsLoggedIn(true);
-                setError('');
-            })
-            .catch((err) => {
-                setError(err.message);
-            });
-
-        setLoading(false);
+export function getStaticPaths() {
+    return {
+        paths: [
+            { params: { someId: '1' } },
+            { params: { someId: '2' } },
+            { params: { someId: '3' } },
+            // or strings 😎
+            { params: { someId: 'stop' } },
+            { params: { someId: 'hammer' } },
+            { params: { someId: 'time' } },
+        ],
+        fallback: false,
     };
+}
+```
 
+Sve skupa:
+
+```jsx
+const SomeBlogPost = ({ someId }) => {
     return (
-        <main className={styles.page}>
-            <section className={styles.content}>
-                <h1 className={styles.title}>
-                    {isLoggedIn ? 'You are logged in!' : 'Log in'}
-                </h1>
-                {!isLoggedIn && (
-                    <section className={styles.form}>
-                        <div className={styles.inputWrapper}>
-                            <input
-                                value={email}
-                                type="email"
-                                id="email"
-                                className={styles.emailInput}
-                                placeholder="Email or username"
-                                onChange={(e) => setEmail(e.target.value)}
-                            />
-                        </div>
-                        <div className={styles.inputWrapper}>
-                            <input
-                                value={password}
-                                type="password"
-                                id="password"
-                                placeholder="Password"
-                                className={styles.passwordInput}
-                                onChange={(e) => setPassword(e.target.value)}
-                            />
-                        </div>
-                        {loading ? (
-                            <Spinner />
-                        ) : (
-                            <button
-                                onClick={handleSubmit}
-                                className={styles.submitButton}
-                            >
-                                Login
-                            </button>
-                        )}
-                    </section>
-                )}
-                {error && <p className={styles.error}>{error}</p>}
-                {isLoggedIn && (
-                    <button
-                        onClick={() => {
-                            setIsLoggedIn(false);
-                            safeLocalStorage.removeItem('isLoggedIn');
-                            safeLocalStorage.removeItem('token');
-                        }}
-                        className={styles.submitButton}
-                    >
-                        Logout
-                    </button>
-                )}
-            </section>
-        </main>
+        <h1 className="text-2xl">
+            HI! You are on <span className="text-red-500">{someId}</span>
+        </h1>
     );
 };
 
-export default Login;
-```
+export default SomeBlogPost;
 
-> ✅ Commit  
-> `git add .`  
-> `git commit -m "Vjezba 5: Do the real login"`
+export function getStaticPaths() {
+    return {
+        paths: [
+            { params: { someId: '1' } },
+            { params: { someId: '2' } },
+            { params: { someId: '3' } },
+            { params: { someId: 'stop' } },
+            { params: { someId: 'hammer' } },
+            { params: { someId: 'time' } },
+        ],
+        fallback: false,
+    };
+}
 
-### Commit 7: Rework self page
-
-Budući da se user više ne sprema, potrebno je dohvatiti usera koristeći token.
-
-Odgovor servera na `api/self` ruti je user čiji token šaljemo. Znači samo da umjesto da uzimamo usera iz _localStoragea_ uzimamo ga sa servera.
-
-```jsx
-const Self = () => {
-    const [currentUser, setCurrentUser] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-    useEffect(() => {
-        if (localStorage.getItem('isLoggedIn') === 'true') {
-            setIsLoggedIn(true);
-        }
-
-        const token = localStorage.getItem('token');
-        if (!token) {
-            return;
-        }
-
-        api.self(token).then(({ user }) => {
-            setLoading(false);
-            setCurrentUser(user);
-        });
-    }, []);
-
-    if (loading) {
-        return null;
-    }
-
-    if (!isLoggedIn || !currentUser) {
-        return (...)
-    }
+export function getStaticProps(context) {
+    return {
+        props: {
+            someId: context.params.someId,
+        },
+    };
 }
 ```
 
 > ✅ Commit  
 > `git add .`  
-> `git commit -m "Vjezba 5: Rework self page"`
+> `git commit -m "Vjezba 6: Dynamic pages: SSG"`
 
-### Commit 8: Create useAuth hook
+### Commit 5: Blog post page SSG
 
-Vidimo da ponavljamo dosta logike vezano za token. Možemo to izvući u zasebnu funkciju koja sprema state. Takva funkcija se zove **React Hook**.
+Za kraj prikazat ćemo blog posts template file i za svaki blog post na URL-u dohvatit ćemo podatke.
 
-React Hook uvijek počinje s `use`. Znači da `useEffect` i `useState` su hook funkcije. Sada ćemo stvoriti svoju.
-
-Cilj je:
-
--   Da funkcija odradi dohvaćanje tokena
--   Ako token postoji onda ga i vrati
--   Vraća nam i funkciju za poništavanje tokena i za postavljanje tokena (dakle 3 stvari)
-
-Stvaramo `hooks` folder i file koji ćemo nazvati `useAuth.js`:
+URL: https://my-json-server.typicode.com/kula124/json-placeholder/
 
 ```jsx
-// hooks/useAuth.js
-import { useEffect, useState } from 'react';
-import { safeLocalStorage } from '../helpers';
+const BlogPost = ({ post }) => (
+    <main className="w-2/3 mx-auto my-0 flex flex-col items-center">
+        <h1 className="text-center text-8xl text-gray-800">{post.title}</h1>
+        <h2 className="text-center text-5xl my-8 text-gray-600">
+            Some subtitle can go here
+        </h2>
+        <Image
+            className="mx-auto"
+            src={post.imgSrc}
+            alt="post image"
+            layout="fixed"
+            width={800}
+            height={400}
+        />
+        <p className="text-gray-800 text-xl mt-16">{post.body}...</p>
+        <p>Read more bellow</p>
+        <a href={post.link}>
+            <span>Learn more</span>
+        </a>
+    </main>
+);
 
-const useAuth = () => {
-    const [token, setToken] = useState(null);
-
-    useEffect(() => {
-        setToken(safeLocalStorage.getItem('token'));
-    }, []);
-
-    const setAuth = (token) => {
-        safeLocalStorage.setItem('token', token);
-        setToken(token);
-    };
-
-    const removeAuth = () => {
-        safeLocalStorage.removeItem('token');
-        setToken(null);
-    };
-
-    return { token, setAuth, removeAuth };
-};
-
-export default useAuth;
+export default BlogPost;
 ```
 
-> ✅ Commit  
-> `git add .`  
-> `git commit -m "Vjezba 5: Create useAuth hook"`
+Za dohvaćanje pathova koristimo obični get na /posts na dani URL. Kod za to je u `api.js` datoteci:
 
-### Commit 9: Use the new hook
+```js
+export async function getStaticPaths() {
+    const posts = await api.getPosts();
 
-Možemo zamijeniti svu logiku vezanu za login u `login.js` i `self.js` .
+    const paths = posts.map((post) => ({
+        params: {
+            someId: post.slug,
+        },
+    }));
 
-Login:
-
-```jsx
-import { useState } from 'react';
-import { useRouter } from 'next/router';
-
-import Spinner from '../components/Spinner';
-import api from '../api';
-
-import styles from '../styles/login.module.scss';
-import useAuth from '../hooks/useAuth';
-
-const Login = () => {
-    const { removeAuth, setAuth, token } = useAuth();
-    const router = useRouter();
-
-    const [password, setPassword] = useState('');
-    const [email, setEmail] = useState('');
-
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        setLoading(true);
-
-        await api
-            .login(email, password)
-            .then(({ token }) => {
-                setError('');
-                setAuth(token);
-                router.push('/home');
-            })
-            .catch((err) => {
-                setError(err.message);
-            });
-
-        setLoading(false);
+    return {
+        paths,
+        fallback: false,
     };
-
-    return (
-        <main className={styles.page}>
-            <section className={styles.content}>
-                <h1 className={styles.title}>
-                    {token ? 'You are logged in!' : 'Log in'}
-                </h1>
-                {!token && (
-                    <section className={styles.form}>
-                        <div className={styles.inputWrapper}>
-                            <input
-                                value={email}
-                                type="email"
-                                id="email"
-                                className={styles.emailInput}
-                                placeholder="Email or username"
-                                onChange={(e) => setEmail(e.target.value)}
-                            />
-                        </div>
-                        <div className={styles.inputWrapper}>
-                            <input
-                                value={password}
-                                type="password"
-                                id="password"
-                                placeholder="Password"
-                                className={styles.passwordInput}
-                                onChange={(e) => setPassword(e.target.value)}
-                            />
-                        </div>
-                        {loading ? (
-                            <Spinner />
-                        ) : (
-                            <button
-                                onClick={handleSubmit}
-                                className={styles.submitButton}
-                            >
-                                Login
-                            </button>
-                        )}
-                    </section>
-                )}
-                {error && <p className={styles.error}>{error}</p>}
-                {token && (
-                    <button
-                        onClick={() => {
-                            removeAuth();
-                            router.push('/home');
-                        }}
-                        className={styles.submitButton}
-                    >
-                        Logout
-                    </button>
-                )}
-            </section>
-        </main>
-    );
-};
-
-export default Login;
+}
 ```
 
-Self:
+Za svaki pojedini blog post koristimo njegov slug (id):
 
 ```jsx
-import { useEffect, useState } from 'react';
+export async function getStaticProps({ params: { someId } }) {
+    const post = await api.getPostBySlug(someId);
 
-import Link from 'next/link';
-import api from '../api';
-import HeaderFooterLayout from '../layouts/HeaderFooterLayout';
-import useAuth from '../hooks/useAuth';
-
-const Self = () => {
-    const { token } = useAuth();
-    const [currentUser, setCurrentUser] = useState(null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        if (!token) {
-            return;
-        }
-
-        api.self(token).then(({ user }) => {
-            setLoading(false);
-            setCurrentUser(user);
-        });
-    }, [token]);
-
-    if (loading) {
-        return null;
-    }
-
-    if (!token || !currentUser) {
-        return (...)
-    }
+    return {
+        props: {
+            post,
+        },
+    };
 }
 ```
 
 > ✅ Commit  
 > `git add .`  
-> `git commit -m "Vjezba 5: Use the new hook"`
+> `git commit -m "Vjezba 6: Blog posts SSG"`
 
-### Commit 9: Use the new hook in navigation
+### Commit 6: List all posts
 
-Recimo da ne želimo prikazati `Me` ako korisnik nije logiran. Možemo ubaciti novi property u `const` koji govori da je rute protected i onda koristeći hook napraviti usporedbu.
+Zadnji sitni commit je jednostavna lista svih blog postova u `index.js` fileu.
 
-Dva koraka!
+Unutar `blog` pagea stvorimo još `index.js` sa sljedećim sadržajem:
 
-Prvi:
-
-```jsx
-export const navigationItems = [
-    { label: 'Home', path: '/home' },
-    { label: 'About us', path: '/about' },
-    { label: 'State Showcase', path: '/state' },
-    { label: 'Blog', path: '' },
-    { label: 'Sign in', path: '/login' },
-    { label: 'Me', path: '/self', needsAuth: true },
-];
-```
-
-Drugi:
+Ako idemo na `/blog/` umjesto na `/blog/nesto` onda pogađamo `index.js` unutar tog foldera. To nam može služiti za listanje sadržaja.
 
 ```jsx
-import { navigationItems } from '../constants/navbar';
-import { useRouter } from 'next/router';
+import api from '../../api';
 
-import Link from 'next/link';
-import useAuth from '../hooks/useAuth';
-
-const NavBar = () => {
-    const router = useRouter();
-    const currentPage = router.pathname;
-
-    const { token } = useAuth();
-
+const Blogs = ({ posts }) => {
     return (
-        <nav className="inline-flex list-none font-medium text-hci-lila">
-            {navigationItems.map(({ label, path, needsAuth }) =>
-                needsAuth && !token ? null : (
-                    <Link href={path} key={label} passHref>
-                        <li
-                            key={label}
-                            className={`px-5 py-2 whitespace-nowrap hover:bg-hci-lila hover:bg-opacity-50 hover:text-white cursor-pointer ${
-                                currentPage === path
-                                    ? 'text-hci-lila-light bg-hci-lila bg-opacity-60'
-                                    : ''
-                            }`}
-                        >
-                            {path === '/login' && token ? 'Logout' : label}
-                        </li>
-                    </Link>
-                )
-            )}
-        </nav>
+        <div className="flex flex-col items-center">
+            <h1 className="text-4xl font-bold">Blog</h1>
+            <ul className="flex flex-col items-center">
+                {posts.map((post) => (
+                    <li key={post.id} className="my-4">
+                        <a href={`/blog/${post.slug}`}>{post.title}</a>
+                    </li>
+                ))}
+            </ul>
+        </div>
     );
 };
 
-export default NavBar;
+export default Blogs;
+
+export async function getStaticProps() {
+    // Get list of all posts
+    const posts = await api.getPosts();
+
+    return {
+        props: { posts },
+    };
+}
 ```
 
 > ✅ Commit  
 > `git add .`  
-> `git commit -m "Vjezba 5: Use the new hook in navigation"`
+> `git commit -m "Vjezba 6: List all posts"`
