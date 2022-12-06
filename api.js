@@ -1,3 +1,6 @@
+const JSON_REST_BASE =
+    'https://my-json-server.typicode.com/kula124/json-placeholder/';
+
 const api = {
     login: async (email, password) => {
         const res = await fetch('/api/login', {
@@ -29,6 +32,24 @@ const api = {
         }
 
         return res.json();
+    },
+    getPosts: async () => {
+        const res = await fetch(`${JSON_REST_BASE}posts`, {});
+
+        if (res.status !== 200) {
+            throw new Error('Request failed');
+        }
+
+        return res.json();
+    },
+    getPostBySlug: async (slug) => {
+        const res = await fetch(`${JSON_REST_BASE}posts?slug=${slug}`, {});
+
+        if (res.status !== 200) {
+            throw new Error('Request failed');
+        }
+
+        return res.json().then((posts) => posts[0]);
     },
 };
 
