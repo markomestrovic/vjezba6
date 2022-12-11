@@ -9,7 +9,21 @@ const SomeBlogPost = ({someId}) => {
 
 export default SomeBlogPost;
 
-export function getServerSideProps(context) {
+export function getStaticPaths() {
+    return {
+        paths: [
+            { params: { someId: '1' } },
+            { params: { someId: '2' } },
+            { params: { someId: '3' } },
+            { params: { someId: 'stop' } },
+            { params: { someId: 'hammer' } },
+            { params: { someId: 'time' } },
+        ],
+        fallback: false,
+    };
+}
+
+export function getStaticProps(context) {
     return {
         props: {
             someId: context.params.someId,
