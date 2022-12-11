@@ -1,0 +1,103 @@
+.page {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(-45deg, #4b2354, #e73c7e, #23a6d5, #bd59d4);
+  background-size: 400% 400%;
+  -webkit-animation: gradient 15s ease infinite;
+          animation: gradient 15s ease infinite;
+  height: 100vh;
+}
+@-webkit-keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+.page .content {
+  background-color: white;
+  border-radius: 10px;
+  padding: 55px 30px;
+  box-shadow: 0 0 15px 10px rgba(75, 35, 84, 0.2);
+  position: relative;
+}
+.page .content .title {
+  color: #4b2354;
+  font-size: 30px;
+  line-height: 1.2;
+  text-align: center;
+}
+.page .content .form {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+.page .content .form .inputWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: content-box;
+  width: 100%;
+  position: relative;
+  background-color: #fff;
+  border-radius: 20px;
+  margin-block: 20px;
+  box-shadow: 0 0 10px 2px rgba(75, 35, 84, 0.1);
+  padding: 5px;
+}
+.page .content .form .inputWrapper .emailInput,
+.page .content .form .inputWrapper .passwordInput {
+  color: #4b2354;
+  line-height: 1.2;
+  display: inline-block;
+  width: 100%;
+  padding: 15px 5px;
+}
+.page .content .form .inputWrapper .emailInput:focus,
+.page .content .form .inputWrapper .passwordInput:focus {
+  outline: none;
+  border: none;
+}
+.page .content .submitButton {
+  display: block;
+  margin: 10px auto;
+  padding: 0 20px;
+  min-width: 160px;
+  height: 50px;
+  background-color: #4b2354;
+  border-radius: 25px;
+  font-size: 14px;
+  color: #fff;
+  line-height: 1.2;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+.page .content .submitButton:hover {
+  background-color: #bd59d4;
+}
+.page .content .error {
+  color: red;
+  font-size: 14px;
+  line-height: 1.2;
+  text-align: center;
+  margin-block: 10px;
+}/*# sourceMappingURL=login.module.css.map */
