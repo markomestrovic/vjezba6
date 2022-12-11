@@ -1,3 +1,7 @@
+import Image from 'next/image';
+
+import api from '../../api';
+
 const BlogPost = ({ post }) => (
     <main className="w-2/3 mx-auto my-0 flex flex-col items-center">
         <h1 className="text-center text-8xl text-gray-800">{post.title}</h1>
@@ -13,7 +17,7 @@ const BlogPost = ({ post }) => (
             height={400}
         />
         <p className="text-gray-800 text-xl mt-16">{post.body}...</p>
-        <p>Read more bellow</p>
+        <p>Read more below</p>
         <a href={post.link}>
             <span>Learn more</span>
         </a>
@@ -35,8 +39,7 @@ export async function getStaticPaths() {
         paths,
         fallback: false,
     };
-}   
-
+}
 
 export async function getStaticProps({ params: { someId } }) {
     const post = await api.getPostBySlug(someId);
